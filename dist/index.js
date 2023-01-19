@@ -13,7 +13,13 @@ const { JSDOM } = jsdom;
 const axios = require("axios");
 function getFundaPage() {
     return __awaiter(this, void 0, void 0, function* () {
+        // let urls = ["https://www.funda.nl/huur/amsterdam/", "https://www.funda.nl/huur/amsterdam/p2/"];
+        // const requests = urls.map((url) => axios.get(url));
+        // const response = await axios.all(requests)
         const response = yield axios.default.get("https://www.funda.nl/huur/amsterdam/");
+        // const response = await axios.all([url1, url2]).then((data: any)=> {
+        //     console.log(data)
+        // })
         const html = response.data; //get HTML
         const doc = new JSDOM(html); //parses HTML into object
         const listedHouses = doc.window.document.querySelectorAll("ol");
@@ -38,8 +44,18 @@ function getFundaPage() {
                 }
                 console.log(address);
                 //get the price
-                let rentalPrice = array[56] + " " + array[57] + " " + array[58] + array[59] + array[60];
+                let rentalPrice = array[56] + array[57] + array[58] + array[59] + array[60];
                 console.log(rentalPrice);
+                //get the size
+                let size = array[68] + " " + array[69] + " " + array[70] + " " + array[71] + " " + array[72];
+                if (size.includes("m") === false) {
+                    size += array[77] + array[78] + array[79] + array[80];
+                }
+                console.log(size);
+                //get roomcount
+                let roomCount = array[76] + " " + array[77] + " " + array[78] + " " + array[79];
+                console.log(roomCount);
+                //creat object
                 // const houseObject = {
                 // address: address
                 // }

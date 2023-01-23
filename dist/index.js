@@ -8,64 +8,76 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
-const jsdom = require("jsdom");
-const { JSDOM } = jsdom;
-const axios = require("axios");
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+const scraper_1 = require("./scraper");
+const utils_1 = require("./utils");
+const axios_1 = __importDefault(require("axios"));
+function removeSpaces(query) {
+    if (typeof query === "string") {
+        const cleanQuery = query.replace(/\\n]+|[\s]{2,}|[, ]+/g, " ");
+        return cleanQuery;
+    }
+    else {
+        return null;
+    }
+}
+const houseArray = [];
 function getFundaPage() {
     var _a, _b, _c, _d, _e;
     return __awaiter(this, void 0, void 0, function* () {
-        const response = yield axios.default.get("https://www.funda.nl/huur/amsterdam/");
-        const html = response.data; //get HTML
-        const doc = new JSDOM(html); //parses HTML into object
-        const listedHouses = doc.window.document.querySelectorAll("ol");
-        class HouseObject {
-        }
-        const housesArray = [{ HouseObject }];
+        const response = yield axios_1.default.get("https://www.funda.nl/huur/amsterdam/");
+        const html = response.data;
+        const doc = (0, utils_1.htmlToJSDOM)(html);
+        const listedHouses = (0, scraper_1.parseListings)(doc);
         for (let index = 0; index < listedHouses.length; index++) {
-            const listedHouse = listedHouses[index];
-            const houseDetails = listedHouse.querySelectorAll("li");
-            for (let index = 0; index < houseDetails.length; index++) {
-                const addressQuery = (_a = houseDetails[index].querySelector("h2")) === null || _a === void 0 ? void 0 : _a.textContent;
-                let address = "";
-                if (addressQuery !== undefined) {
-                    address = addressQuery;
-                }
-                // console.log(address)
-                const postalCodeQuery = (_b = houseDetails[index].querySelector("h4")) === null || _b === void 0 ? void 0 : _b.textContent;
-                let postalCode = "";
-                if (postalCodeQuery !== undefined) {
-                    postalCode = postalCodeQuery;
-                }
-                // console.log(postalCode)
-                const priceQuery = (_c = houseDetails[index].querySelector(".search-result-price")) === null || _c === void 0 ? void 0 : _c.textContent;
-                let price = "";
-                if (priceQuery !== undefined) {
-                    price = priceQuery;
-                }
-                // console.log(price)
-                const detailsQuery = (_d = houseDetails[index].querySelector("ul")) === null || _d === void 0 ? void 0 : _d.textContent;
-                let details = "";
-                if (detailsQuery !== undefined) {
-                    details = detailsQuery;
-                }
-                // console.log(details)
-                const realEstateQuery = (_e = houseDetails[index].querySelector(".search-result-makelaar-name")) === null || _e === void 0 ? void 0 : _e.textContent;
-                let realEstate = "";
-                if (realEstateQuery !== undefined) {
-                    realEstate = realEstateQuery;
-                }
-                // console.log(realEstate)
-                const houseObject = {
-                    address: address,
-                    postalCode: postalCode,
-                    price: price,
-                    details: details,
-                    realEstate: realEstate
+            const listedHouse = listedHouses[index].querySelectorAll("li");
+            for (let index = 0; index < listedHouse.length; index++) {
+                let houseObject = {
+                    address: "",
+                    postalCode: "",
+                    price: "",
+                    size: "",
+                    rooms: "",
+                    realEstate: "",
                 };
-                //BUG: remove spaces + \n from results in object
-                console.log(houseObject);
+                const addressQuery = (_a = listedHouse[index].querySelector("h2")) === null || _a === void 0 ? void 0 : _a.textContent;
+                if (addressQuery === undefined) {
+                    continue;
+                }
+                houseObject.address = removeSpaces(addressQuery);
+                const postalCodeQuery = (_b = listedHouse[index].querySelector("h4")) === null || _b === void 0 ? void 0 : _b.textContent;
+                houseObject.postalCode = removeSpaces(postalCodeQuery);
+                const priceQuery = (_c = listedHouse[index].querySelector(".search-result-price")) === null || _c === void 0 ? void 0 : _c.textContent;
+                if (priceQuery !== undefined) {
+                    const priceWithoutEuro = priceQuery === null || priceQuery === void 0 ? void 0 : priceQuery.replace("€", "");
+                    const priceOnlyNumber = priceWithoutEuro === null || priceWithoutEuro === void 0 ? void 0 : priceWithoutEuro.replace("/mnd", "");
+                    houseObject.price = priceOnlyNumber;
+                }
+                const detailsQuery = (_d = listedHouse[index].querySelector(".search-result-kenmerken")) === null || _d === void 0 ? void 0 : _d.textContent;
+                const details = removeSpaces(detailsQuery);
+                if (typeof details === "string") {
+                    const detailsArray = details === null || details === void 0 ? void 0 : details.split(" ");
+                    const squareMeter = detailsArray[1];
+                    houseObject.size = squareMeter;
+                    const roomCount = detailsArray[3];
+                    if (roomCount == "/") {
+                        let takeRoomCount = detailsArray[6];
+                        houseObject.rooms = takeRoomCount;
+                    }
+                    else {
+                        houseObject.rooms = roomCount;
+                    }
+                }
+                const realEstateQuery = (_e = listedHouse[index].querySelector(".search-result-makelaar-name")) === null || _e === void 0 ? void 0 : _e.textContent;
+                houseObject.realEstate = removeSpaces(realEstateQuery);
+                houseArray.push(houseObject);
             }
+            // fs.writeFileSync("./houseDetails.json", JSON.stringify(houseObject));
         }
+        console.log(houseArray);
     });
 }
 getFundaPage();

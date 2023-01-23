@@ -12,9 +12,11 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.removeSpaces = void 0;
 const scraper_1 = require("./scraper");
 const utils_1 = require("./utils");
 const axios_1 = __importDefault(require("axios"));
+const fs_1 = __importDefault(require("fs"));
 function removeSpaces(query) {
     if (typeof query === "string") {
         const cleanQuery = query.replace(/\\n]+|[\s]{2,}|[, ]+/g, " ");
@@ -24,6 +26,7 @@ function removeSpaces(query) {
         return null;
     }
 }
+exports.removeSpaces = removeSpaces;
 const houseArray = [];
 function getFundaPage() {
     var _a, _b, _c, _d, _e;
@@ -75,8 +78,8 @@ function getFundaPage() {
                 houseObject.realEstate = removeSpaces(realEstateQuery);
                 houseArray.push(houseObject);
             }
-            // fs.writeFileSync("./houseDetails.json", JSON.stringify(houseObject));
         }
+        fs_1.default.writeFileSync("./houseDetails.json", JSON.stringify(houseArray));
         console.log(houseArray);
     });
 }

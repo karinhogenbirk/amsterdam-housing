@@ -3,7 +3,7 @@ import { htmlToJSDOM } from "./utils";
 import axios from "axios";
 import fs from "fs";
 
-function removeSpaces(query: string | undefined | null) {
+export function removeSpaces(query: string | undefined | null) {
   if (typeof query === "string") {
     const cleanQuery = query.replace(/\\n]+|[\s]{2,}|[, ]+/g, " ");
     return cleanQuery;
@@ -91,9 +91,8 @@ async function getFundaPage() {
 
       houseArray.push(houseObject);
     }
-
-    // fs.writeFileSync("./houseDetails.json", JSON.stringify(houseObject));
   }
+  fs.writeFileSync("./houseDetails.json", JSON.stringify(houseArray));
   console.log(houseArray);
 }
 

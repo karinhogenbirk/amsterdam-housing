@@ -12,6 +12,107 @@ export function removeSpaces(query: string | undefined | null) {
   }
 }
 
+export function takeAddress(listedHouse: HTMLElement | null) {
+  if (listedHouse !== null) {
+    const addressQuery = listedHouse.querySelector("h2")?.textContent;
+    return addressQuery;
+  } else {
+    return null;
+  }
+}
+
+export function takePostalCode(listedHouse: HTMLElement | null) {
+  if (listedHouse !== null) {
+    const postalCodeQuery = listedHouse.querySelector("h4")?.textContent;
+    return postalCodeQuery;
+  } else {
+    return null;
+  }
+}
+
+export function takePrice(listedHouse: HTMLElement | null) {
+  if (listedHouse !== null) {
+    const priceQuery = listedHouse.querySelector(
+      ".search-result-price"
+    )?.textContent;
+    return priceQuery;
+  } else {
+    return null;
+  }
+}
+
+export function takeDetails(listedHouse: HTMLElement | null) {
+  if (listedHouse !== null) {
+    const detailsQuery = listedHouse.querySelector(
+      ".search-result-kenmerken"
+    )?.textContent;
+    return detailsQuery;
+  } else {
+    return null;
+  }
+}
+
+export function takeRealEstate(listedHouse: HTMLElement | null) {
+  if (listedHouse !== null) {
+    const realEstateQuery = listedHouse.querySelector(
+      ".search-result-makelaar-name"
+    )?.textContent;
+    return realEstateQuery;
+  } else {
+    return null;
+  }
+}
+
+export function parseHousing(listedHouse: HTMLElement) {
+  let houseObject: THouseObject = {
+    address: "",
+    postalCode: "",
+    price: "",
+    size: "",
+    rooms: "",
+    availability: "",
+    realEstate: "",
+  };
+
+  const addressQuery = takeAddress(listedHouse);
+  houseObject.address = removeSpaces(addressQuery);
+
+  const postalCodeQuery = takePostalCode(listedHouse);
+  houseObject.postalCode = removeSpaces(postalCodeQuery);
+
+  const priceQuery = takePrice(listedHouse);
+  const priceWithoutEuro = priceQuery?.replace("€", "");
+  const priceOnlyNumber = priceWithoutEuro?.replace("/mnd", "");
+  houseObject.price = priceOnlyNumber;
+
+  const detailsQuery = takeDetails(listedHouse);
+
+  const details: string | null | undefined = removeSpaces(detailsQuery);
+  if (typeof details === "string") {
+    const detailsArray: Array<string> = details?.split(" ");
+    const squareMeter = detailsArray[1];
+    const availability =
+      detailsArray[5] + " " + detailsArray[6] + " " + detailsArray[7];
+    houseObject.size = squareMeter;
+    const roomCount = detailsArray[3];
+    if (roomCount == "/") {
+      let takeRoomCount = detailsArray[6];
+      let takeAvailabily =
+        detailsArray[8] + " " + detailsArray[9] + " " + detailsArray[10];
+      houseObject.rooms = takeRoomCount;
+      houseObject.availability = takeAvailabily;
+    } else {
+      houseObject.rooms = roomCount;
+      houseObject.availability = availability;
+    }
+  }
+
+  const realEstateQuery = takeRealEstate(listedHouse);
+  houseObject.realEstate = removeSpaces(realEstateQuery);
+
+  houseArray.push(houseObject);
+}
+
 type THouseObject = {
   address: string | null | undefined;
   postalCode: string | null | undefined;
@@ -34,71 +135,11 @@ async function getFundaPage() {
     const listedHouse = listedHouses[index].querySelectorAll("li");
 
     for (let index = 0; index < listedHouse.length; index++) {
-      let houseObject: THouseObject = {
-        address: "",
-        postalCode: "",
-        price: "",
-        size: "",
-        rooms: "",
-        availability: "",
-        realEstate: "",
-      };
-      const addressQuery = listedHouse[index].querySelector("h2")?.textContent;
-
+      const addressQuery = takeAddress(listedHouse[index]);
       if (addressQuery === undefined) {
         continue;
       }
-
-      houseObject.address = removeSpaces(addressQuery);
-
-      const postalCodeQuery =
-        listedHouse[index].querySelector("h4")?.textContent;
-
-      houseObject.postalCode = removeSpaces(postalCodeQuery);
-
-      const priceQuery = listedHouse[index].querySelector(
-        ".search-result-price"
-      )?.textContent;
-
-      if (priceQuery !== undefined) {
-        const priceWithoutEuro = priceQuery?.replace("€", "");
-        const priceOnlyNumber = priceWithoutEuro?.replace("/mnd", "");
-
-        houseObject.price = priceOnlyNumber;
-      }
-
-      const detailsQuery = listedHouse[index].querySelector(
-        ".search-result-kenmerken"
-      )?.textContent;
-
-      const details: string | null | undefined = removeSpaces(detailsQuery);
-      if (typeof details === "string") {
-        const detailsArray: Array<string> = details?.split(" ");
-        // console.log(detailsArray);
-        const squareMeter = detailsArray[1];
-        const availability =
-          detailsArray[5] + " " + detailsArray[6] + " " + detailsArray[7];
-        houseObject.size = squareMeter;
-        const roomCount = detailsArray[3];
-        if (roomCount == "/") {
-          let takeRoomCount = detailsArray[6];
-          let takeAvailabily =
-            detailsArray[8] + " " + detailsArray[9] + " " + detailsArray[10];
-          houseObject.rooms = takeRoomCount;
-          houseObject.availability = takeAvailabily;
-        } else {
-          houseObject.rooms = roomCount;
-          houseObject.availability = availability;
-        }
-      }
-
-      const realEstateQuery = listedHouse[index].querySelector(
-        ".search-result-makelaar-name"
-      )?.textContent;
-
-      houseObject.realEstate = removeSpaces(realEstateQuery);
-
-      houseArray.push(houseObject);
+      parseHousing(listedHouse[index]);
     }
   }
   // fs.writeFileSync("./houseDetails.json", JSON.stringify(houseArray));

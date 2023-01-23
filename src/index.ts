@@ -18,6 +18,7 @@ type THouseObject = {
   price: string | null | undefined;
   size: string | null | undefined;
   rooms: string | null | undefined;
+  availability: string | null | undefined;
   realEstate: string | null | undefined;
 };
 
@@ -39,6 +40,7 @@ async function getFundaPage() {
         price: "",
         size: "",
         rooms: "",
+        availability: "",
         realEstate: "",
       };
       const addressQuery = listedHouse[index].querySelector("h2")?.textContent;
@@ -72,14 +74,21 @@ async function getFundaPage() {
       const details: string | null | undefined = removeSpaces(detailsQuery);
       if (typeof details === "string") {
         const detailsArray: Array<string> = details?.split(" ");
+        // console.log(detailsArray);
         const squareMeter = detailsArray[1];
+        const availability =
+          detailsArray[5] + " " + detailsArray[6] + " " + detailsArray[7];
         houseObject.size = squareMeter;
         const roomCount = detailsArray[3];
         if (roomCount == "/") {
           let takeRoomCount = detailsArray[6];
+          let takeAvailabily =
+            detailsArray[8] + " " + detailsArray[9] + " " + detailsArray[10];
           houseObject.rooms = takeRoomCount;
+          houseObject.availability = takeAvailabily;
         } else {
           houseObject.rooms = roomCount;
+          houseObject.availability = availability;
         }
       }
 
@@ -92,7 +101,7 @@ async function getFundaPage() {
       houseArray.push(houseObject);
     }
   }
-  fs.writeFileSync("./houseDetails.json", JSON.stringify(houseArray));
+  // fs.writeFileSync("./houseDetails.json", JSON.stringify(houseArray));
   console.log(houseArray);
 }
 

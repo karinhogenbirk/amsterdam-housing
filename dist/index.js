@@ -16,7 +16,6 @@ exports.removeSpaces = void 0;
 const scraper_1 = require("./scraper");
 const utils_1 = require("./utils");
 const axios_1 = __importDefault(require("axios"));
-const fs_1 = __importDefault(require("fs"));
 function removeSpaces(query) {
     if (typeof query === "string") {
         const cleanQuery = query.replace(/\\n]+|[\s]{2,}|[, ]+/g, " ");
@@ -44,6 +43,7 @@ function getFundaPage() {
                     price: "",
                     size: "",
                     rooms: "",
+                    availability: "",
                     realEstate: "",
                 };
                 const addressQuery = (_a = listedHouse[index].querySelector("h2")) === null || _a === void 0 ? void 0 : _a.textContent;
@@ -63,15 +63,20 @@ function getFundaPage() {
                 const details = removeSpaces(detailsQuery);
                 if (typeof details === "string") {
                     const detailsArray = details === null || details === void 0 ? void 0 : details.split(" ");
+                    // console.log(detailsArray);
                     const squareMeter = detailsArray[1];
+                    const availability = detailsArray[5] + " " + detailsArray[6] + " " + detailsArray[7];
                     houseObject.size = squareMeter;
                     const roomCount = detailsArray[3];
                     if (roomCount == "/") {
                         let takeRoomCount = detailsArray[6];
+                        let takeAvailabily = detailsArray[8] + " " + detailsArray[9] + " " + detailsArray[10];
                         houseObject.rooms = takeRoomCount;
+                        houseObject.availability = takeAvailabily;
                     }
                     else {
                         houseObject.rooms = roomCount;
+                        houseObject.availability = availability;
                     }
                 }
                 const realEstateQuery = (_e = listedHouse[index].querySelector(".search-result-makelaar-name")) === null || _e === void 0 ? void 0 : _e.textContent;
@@ -79,7 +84,7 @@ function getFundaPage() {
                 houseArray.push(houseObject);
             }
         }
-        fs_1.default.writeFileSync("./houseDetails.json", JSON.stringify(houseArray));
+        // fs.writeFileSync("./houseDetails.json", JSON.stringify(houseArray));
         console.log(houseArray);
     });
 }

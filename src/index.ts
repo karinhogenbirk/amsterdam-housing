@@ -63,7 +63,7 @@ export function takeRealEstate(listedHouse: HTMLElement | null) {
   }
 }
 
-export function parseHousing(listedHouse: HTMLElement) {
+export function parseHousing(listedHouse: HTMLElement | null) {
   let houseObject: THouseObject = {
     address: "",
     postalCode: "",

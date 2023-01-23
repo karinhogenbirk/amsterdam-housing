@@ -22,11 +22,32 @@ describe("Create clean scraping result", () => {
     });
 });
 describe("Create object with house details", () => {
+    const dom = (0, utils_1.htmlToJSDOM)(amsterdamRent_1.default);
+    const listedHouses = (0, scraper_1.parseListings)(dom);
+    const house = listedHouses[1].querySelector("li");
     test("should return house address", () => {
-        const dom = (0, utils_1.htmlToJSDOM)(amsterdamRent_1.default);
-        const listedHouses = (0, scraper_1.parseListings)(dom);
-        const house = listedHouses[1].querySelector("li");
         const address = (0, _1.takeAddress)(house);
         expect(address).toEqual(expect.any(String));
+    });
+    test("should return postal code", () => {
+        const postalCode = (0, _1.takePostalCode)(house);
+        expect(postalCode).toEqual(expect.any(String));
+    });
+    test("should return price", () => {
+        const price = (0, _1.takePrice)(house);
+        expect(price).toEqual(expect.any(String));
+    });
+    test("should return details", () => {
+        const details = (0, _1.takeDetails)(house);
+        expect(details).toEqual(expect.any(String));
+    });
+    test("should return real estate agent", () => {
+        const realEstate = (0, _1.takeRealEstate)(house);
+        expect(realEstate).toEqual(expect.any(String));
+    });
+    test("should create object of house details", () => {
+        const houseObject = (0, _1.parseHousing)(house);
+        console.log(houseObject);
+        expect(houseObject).toMatchObject;
     });
 });

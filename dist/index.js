@@ -16,6 +16,7 @@ exports.parseHousing = exports.takeRealEstate = exports.takeDetails = exports.ta
 const scraper_1 = require("./scraper");
 const utils_1 = require("./utils");
 const axios_1 = __importDefault(require("axios"));
+const fs_1 = __importDefault(require("fs"));
 function removeSpaces(query) {
     if (typeof query === "string") {
         const cleanQuery = query.replace(/\\n]+|[\s]{2,}|[, ]+/g, " ");
@@ -82,6 +83,9 @@ function takeRealEstate(listedHouse) {
 }
 exports.takeRealEstate = takeRealEstate;
 function parseHousing(listedHouse) {
+    try {
+    }
+    catch (error) { }
     let houseObject = {
         address: "",
         postalCode: "",
@@ -120,13 +124,13 @@ function parseHousing(listedHouse) {
     }
     const realEstateQuery = takeRealEstate(listedHouse);
     houseObject.realEstate = removeSpaces(realEstateQuery);
-    houseArray.push(houseObject);
+    return houseObject;
 }
 exports.parseHousing = parseHousing;
 const houseArray = [];
-function getFundaPage() {
+function getFundaPage(pageNumber) {
     return __awaiter(this, void 0, void 0, function* () {
-        const response = yield axios_1.default.get("https://www.funda.nl/huur/amsterdam/");
+        const response = yield axios_1.default.get(`https://www.funda.nl/huur/amsterdam/p${pageNumber}`);
         const html = response.data;
         const doc = (0, utils_1.htmlToJSDOM)(html);
         const listedHouses = (0, scraper_1.parseListings)(doc);
@@ -137,11 +141,50 @@ function getFundaPage() {
                 if (addressQuery === undefined) {
                     continue;
                 }
-                parseHousing(listedHouse[index]);
+                const houseObject = parseHousing(listedHouse[index]);
+                houseArray.push(houseObject);
             }
         }
-        // fs.writeFileSync("./houseDetails.json", JSON.stringify(houseArray));
+        fs_1.default.writeFileSync("./houseDetails.json", JSON.stringify(houseArray));
         console.log(houseArray);
     });
 }
-getFundaPage();
+function sleep() {
+    return new Promise(function (resolve) {
+        setTimeout(resolve, 10000);
+    });
+}
+function getPageLimit() {
+    return __awaiter(this, void 0, void 0, function* () {
+        const response = yield axios_1.default.get(`https://www.funda.nl/huur/amsterdam/`);
+        const html = response.data;
+        const doc = (0, utils_1.htmlToJSDOM)(html);
+        const pageListings = doc.window.document.querySelector(".pagination-pages");
+        const pagination = pageListings === null || pageListings === void 0 ? void 0 : pageListings.querySelectorAll("a");
+        if (pagination !== undefined) {
+            const pageAmount = pagination.length;
+            const lastPage = pagination[pageAmount - 1].textContent;
+            const lastPageNumber = lastPage === null || lastPage === void 0 ? void 0 : lastPage.replace(/[\s]{2,}/, "").split(" ")[1];
+            getPages(Number(lastPageNumber));
+        }
+    });
+}
+function getPages(lastPageNumber) {
+    return __awaiter(this, void 0, void 0, function* () {
+        for (let index = 1; index <= lastPageNumber; index++) {
+            const pageNumber = index;
+            yield sleep();
+            getFundaPage(pageNumber);
+        }
+    });
+}
+// getPageLimit();
+// getPages();
+// getFundaPage();
+//stap 1: maak getFundaPage herbruikbaar (paginanummer accepteren)
+//stap 2: schrijf een for-loop voor de 85 pagina's
+//stap 3: voordat je gaat loopen, ga op zoek naar het hoogste paginanummer op je pagina
+//stap 4: gebruik dit nummer als hoogste loopnummer
+//stap 5: writefilesync
+//clean up, write tests
+//CELEBRATE, feel like a boss

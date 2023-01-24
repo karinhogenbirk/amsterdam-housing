@@ -64,6 +64,8 @@ export function takeRealEstate(listedHouse: HTMLElement | null) {
 }
 
 export function parseHousing(listedHouse: HTMLElement | null) {
+  try {
+  } catch (error) {}
   let houseObject: THouseObject = {
     address: "",
     postalCode: "",
@@ -110,7 +112,7 @@ export function parseHousing(listedHouse: HTMLElement | null) {
   const realEstateQuery = takeRealEstate(listedHouse);
   houseObject.realEstate = removeSpaces(realEstateQuery);
 
-  houseArray.push(houseObject);
+  return houseObject;
 }
 
 type THouseObject = {
@@ -125,8 +127,10 @@ type THouseObject = {
 
 const houseArray: Array<object> = [];
 
-async function getFundaPage() {
-  const response = await axios.get("https://www.funda.nl/huur/amsterdam/");
+async function getFundaPage(pageNumber: number) {
+  const response = await axios.get(
+    `https://www.funda.nl/huur/amsterdam/p${pageNumber}`
+  );
   const html = response.data;
   const doc = htmlToJSDOM(html);
   const listedHouses = parseListings(doc);
@@ -139,11 +143,53 @@ async function getFundaPage() {
       if (addressQuery === undefined) {
         continue;
       }
-      parseHousing(listedHouse[index]);
+
+      const houseObject = parseHousing(listedHouse[index]);
+      houseArray.push(houseObject);
     }
   }
-  // fs.writeFileSync("./houseDetails.json", JSON.stringify(houseArray));
+  fs.writeFileSync("./houseDetails.json", JSON.stringify(houseArray));
   console.log(houseArray);
 }
 
-getFundaPage();
+function sleep() {
+  return new Promise(function (resolve) {
+    setTimeout(resolve, 10000);
+  });
+}
+
+async function getPageLimit() {
+  const response = await axios.get(`https://www.funda.nl/huur/amsterdam/`);
+  const html = response.data;
+  const doc = htmlToJSDOM(html);
+  const pageListings = doc.window.document.querySelector(".pagination-pages");
+  const pagination = pageListings?.querySelectorAll("a");
+  if (pagination !== undefined) {
+    const pageAmount = pagination.length;
+    const lastPage = pagination[pageAmount - 1].textContent;
+    const lastPageNumber = lastPage?.replace(/[\s]{2,}/, "").split(" ")[1];
+    getPages(Number(lastPageNumber));
+  }
+}
+
+async function getPages(lastPageNumber: number) {
+  for (let index = 1; index <= lastPageNumber; index++) {
+    const pageNumber = index;
+    await sleep();
+    getFundaPage(pageNumber);
+  }
+}
+
+// getPageLimit();
+
+// getPages();
+
+// getFundaPage();
+
+//stap 1: maak getFundaPage herbruikbaar (paginanummer accepteren)
+//stap 2: schrijf een for-loop voor de 85 pagina's
+//stap 3: voordat je gaat loopen, ga op zoek naar het hoogste paginanummer op je pagina
+//stap 4: gebruik dit nummer als hoogste loopnummer
+//stap 5: writefilesync
+//clean up, write tests
+//CELEBRATE, feel like a boss

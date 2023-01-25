@@ -17,6 +17,16 @@ const scraper_1 = require("./scraper");
 const utils_1 = require("./utils");
 const axios_1 = __importDefault(require("axios"));
 const fs_1 = __importDefault(require("fs"));
+const express_1 = __importDefault(require("express"));
+const client_1 = require("@prisma/client");
+const app = (0, express_1.default)();
+const prisma = new client_1.PrismaClient();
+app.use(express_1.default.json());
+app.use(express_1.default.urlencoded({ extended: true }));
+const port = 3000;
+app.get("/", (_req, res) => {
+    res.send(`Server is running on port: ${port}`);
+});
 function removeSpaces(query) {
     if (typeof query === "string") {
         const cleanQuery = query.replace(/\\n]+|[\s]{2,}|[, ]+/g, " ");

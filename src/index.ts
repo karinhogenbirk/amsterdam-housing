@@ -63,56 +63,68 @@ export function takeRealEstate(listedHouse: HTMLElement | null) {
   }
 }
 
+let count = 0;
+let maxTries = 3;
+
 export function parseHousing(listedHouse: HTMLElement | null) {
-  try {
-  } catch (error) {}
-  let houseObject: THouseObject = {
-    address: "",
-    postalCode: "",
-    price: "",
-    size: "",
-    rooms: "",
-    availability: "",
-    realEstate: "",
-  };
+  count++;
+  while (true) {
+    try {
+      let houseObject: THouseObject = {
+        address: "",
+        postalCode: "",
+        price: "",
+        size: "",
+        rooms: "",
+        availability: "",
+        realEstate: "",
+      };
 
-  const addressQuery = takeAddress(listedHouse);
-  houseObject.address = removeSpaces(addressQuery);
+      const addressQuery = takeAddress(listedHouse);
+      houseObject.address = removeSpaces(addressQuery);
 
-  const postalCodeQuery = takePostalCode(listedHouse);
-  houseObject.postalCode = removeSpaces(postalCodeQuery);
+      const postalCodeQuery = takePostalCode(listedHouse);
+      houseObject.postalCode = removeSpaces(postalCodeQuery);
 
-  const priceQuery = takePrice(listedHouse);
-  const priceWithoutEuro = priceQuery?.replace("€", "");
-  const priceOnlyNumber = priceWithoutEuro?.replace("/mnd", "");
-  houseObject.price = priceOnlyNumber;
+      const priceQuery = takePrice(listedHouse);
+      const priceWithoutEuro = priceQuery?.replace("€", "");
+      const priceOnlyNumber = priceWithoutEuro?.replace("/mnd", "");
+      houseObject.price = priceOnlyNumber;
 
-  const detailsQuery = takeDetails(listedHouse);
+      const detailsQuery = takeDetails(listedHouse);
 
-  const details: string | null | undefined = removeSpaces(detailsQuery);
-  if (typeof details === "string") {
-    const detailsArray: Array<string> = details?.split(" ");
-    const squareMeter = detailsArray[1];
-    const availability =
-      detailsArray[5] + " " + detailsArray[6] + " " + detailsArray[7];
-    houseObject.size = squareMeter;
-    const roomCount = detailsArray[3];
-    if (roomCount == "/") {
-      let takeRoomCount = detailsArray[6];
-      let takeAvailabily =
-        detailsArray[8] + " " + detailsArray[9] + " " + detailsArray[10];
-      houseObject.rooms = takeRoomCount;
-      houseObject.availability = takeAvailabily;
-    } else {
-      houseObject.rooms = roomCount;
-      houseObject.availability = availability;
+      const details: string | null | undefined = removeSpaces(detailsQuery);
+      if (typeof details === "string") {
+        const detailsArray: Array<string> = details?.split(" ");
+        const squareMeter = detailsArray[1];
+        const availability =
+          detailsArray[5] + " " + detailsArray[6] + " " + detailsArray[7];
+        houseObject.size = squareMeter;
+        const roomCount = detailsArray[3];
+        if (roomCount == "/") {
+          let takeRoomCount = detailsArray[6];
+          let takeAvailabily =
+            detailsArray[8] + " " + detailsArray[9] + " " + detailsArray[10];
+          houseObject.rooms = takeRoomCount;
+          houseObject.availability = takeAvailabily;
+        } else {
+          houseObject.rooms = roomCount;
+          houseObject.availability = availability;
+        }
+      }
+
+      const realEstateQuery = takeRealEstate(listedHouse);
+      houseObject.realEstate = removeSpaces(realEstateQuery);
+      return houseObject;
+    } catch (error) {
+      if (count === maxTries) {
+        throw error;
+      } else {
+        console.log(error, "scraping will be executed again");
+        getPageLimit();
+      }
     }
   }
-
-  const realEstateQuery = takeRealEstate(listedHouse);
-  houseObject.realEstate = removeSpaces(realEstateQuery);
-
-  return houseObject;
 }
 
 type THouseObject = {
@@ -145,7 +157,9 @@ async function getFundaPage(pageNumber: number) {
       }
 
       const houseObject = parseHousing(listedHouse[index]);
-      houseArray.push(houseObject);
+      if (houseObject !== undefined) {
+        houseArray.push(houseObject);
+      }
     }
   }
   fs.writeFileSync("./houseDetails.json", JSON.stringify(houseArray));
@@ -180,16 +194,4 @@ async function getPages(lastPageNumber: number) {
   }
 }
 
-// getPageLimit();
-
-// getPages();
-
-// getFundaPage();
-
-//stap 1: maak getFundaPage herbruikbaar (paginanummer accepteren)
-//stap 2: schrijf een for-loop voor de 85 pagina's
-//stap 3: voordat je gaat loopen, ga op zoek naar het hoogste paginanummer op je pagina
-//stap 4: gebruik dit nummer als hoogste loopnummer
-//stap 5: writefilesync
-//clean up, write tests
-//CELEBRATE, feel like a boss
+getPageLimit();

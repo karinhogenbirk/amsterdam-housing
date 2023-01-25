@@ -33,42 +33,45 @@ describe("Create object with house details", () => {
   const house: HTMLElement | null = listedHouses[1].querySelector("li");
   test("should return house address", () => {
     const address = takeAddress(house);
+
     expect(address).toEqual(expect.any(String));
+    expect(address).not.toBe("");
   });
 
   test("should return postal code", () => {
     const postalCode = takePostalCode(house);
     expect(postalCode).toEqual(expect.any(String));
+    expect(postalCode).not.toBe("");
   });
 
   test("should return price", () => {
     const price = takePrice(house);
     expect(price).toEqual(expect.any(String));
+    expect(price).not.toBe("");
   });
 
   test("should return details", () => {
     const details = takeDetails(house);
     expect(details).toEqual(expect.any(String));
+    expect(details).not.toBe("");
   });
 
   test("should return real estate agent", () => {
     const realEstate = takeRealEstate(house);
     expect(realEstate).toEqual(expect.any(String));
+    expect(realEstate).not.toBe("");
   });
 
-  test("should create object of house details", () => {
+  test("house object should contain all properties", () => {
     const houseObject = parseHousing(house);
-    console.log(houseObject);
-    type THouseObject = {
-      address: string | null | undefined;
-      postalCode: string | null | undefined;
-      price: string | null | undefined;
-      size: string | null | undefined;
-      rooms: string | null | undefined;
-      availability: string | null | undefined;
-      realEstate: string | null | undefined;
-    };
 
-    expect(houseObject).toMatchObject<THouseObject>;
+    expect(houseObject).not.toBe(undefined);
+    expect(houseObject?.address?.length).toBeGreaterThan(0);
+    expect(houseObject?.postalCode?.length).toBeGreaterThan(0);
+    expect(houseObject?.price?.length).toBeGreaterThan(0);
+    expect(houseObject?.size?.length).toBeGreaterThan(0);
+    expect(houseObject?.rooms?.length).toBeGreaterThan(0);
+    expect(houseObject?.availability?.length).toBeGreaterThan(0);
+    expect(houseObject?.realEstate?.length).toBeGreaterThan(0);
   });
 });

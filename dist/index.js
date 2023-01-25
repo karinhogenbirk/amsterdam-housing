@@ -82,49 +82,62 @@ function takeRealEstate(listedHouse) {
     }
 }
 exports.takeRealEstate = takeRealEstate;
+let count = 0;
+let maxTries = 3;
 function parseHousing(listedHouse) {
-    try {
-    }
-    catch (error) { }
-    let houseObject = {
-        address: "",
-        postalCode: "",
-        price: "",
-        size: "",
-        rooms: "",
-        availability: "",
-        realEstate: "",
-    };
-    const addressQuery = takeAddress(listedHouse);
-    houseObject.address = removeSpaces(addressQuery);
-    const postalCodeQuery = takePostalCode(listedHouse);
-    houseObject.postalCode = removeSpaces(postalCodeQuery);
-    const priceQuery = takePrice(listedHouse);
-    const priceWithoutEuro = priceQuery === null || priceQuery === void 0 ? void 0 : priceQuery.replace("€", "");
-    const priceOnlyNumber = priceWithoutEuro === null || priceWithoutEuro === void 0 ? void 0 : priceWithoutEuro.replace("/mnd", "");
-    houseObject.price = priceOnlyNumber;
-    const detailsQuery = takeDetails(listedHouse);
-    const details = removeSpaces(detailsQuery);
-    if (typeof details === "string") {
-        const detailsArray = details === null || details === void 0 ? void 0 : details.split(" ");
-        const squareMeter = detailsArray[1];
-        const availability = detailsArray[5] + " " + detailsArray[6] + " " + detailsArray[7];
-        houseObject.size = squareMeter;
-        const roomCount = detailsArray[3];
-        if (roomCount == "/") {
-            let takeRoomCount = detailsArray[6];
-            let takeAvailabily = detailsArray[8] + " " + detailsArray[9] + " " + detailsArray[10];
-            houseObject.rooms = takeRoomCount;
-            houseObject.availability = takeAvailabily;
+    count++;
+    while (true) {
+        try {
+            let houseObject = {
+                address: "",
+                postalCode: "",
+                price: "",
+                size: "",
+                rooms: "",
+                availability: "",
+                realEstate: "",
+            };
+            const addressQuery = takeAddress(listedHouse);
+            houseObject.address = removeSpaces(addressQuery);
+            const postalCodeQuery = takePostalCode(listedHouse);
+            houseObject.postalCode = removeSpaces(postalCodeQuery);
+            const priceQuery = takePrice(listedHouse);
+            const priceWithoutEuro = priceQuery === null || priceQuery === void 0 ? void 0 : priceQuery.replace("€", "");
+            const priceOnlyNumber = priceWithoutEuro === null || priceWithoutEuro === void 0 ? void 0 : priceWithoutEuro.replace("/mnd", "");
+            houseObject.price = priceOnlyNumber;
+            const detailsQuery = takeDetails(listedHouse);
+            const details = removeSpaces(detailsQuery);
+            if (typeof details === "string") {
+                const detailsArray = details === null || details === void 0 ? void 0 : details.split(" ");
+                const squareMeter = detailsArray[1];
+                const availability = detailsArray[5] + " " + detailsArray[6] + " " + detailsArray[7];
+                houseObject.size = squareMeter;
+                const roomCount = detailsArray[3];
+                if (roomCount == "/") {
+                    let takeRoomCount = detailsArray[6];
+                    let takeAvailabily = detailsArray[8] + " " + detailsArray[9] + " " + detailsArray[10];
+                    houseObject.rooms = takeRoomCount;
+                    houseObject.availability = takeAvailabily;
+                }
+                else {
+                    houseObject.rooms = roomCount;
+                    houseObject.availability = availability;
+                }
+            }
+            const realEstateQuery = takeRealEstate(listedHouse);
+            houseObject.realEstate = removeSpaces(realEstateQuery);
+            return houseObject;
         }
-        else {
-            houseObject.rooms = roomCount;
-            houseObject.availability = availability;
+        catch (error) {
+            if (count === maxTries) {
+                throw error;
+            }
+            else {
+                console.log(error, "scraping will be executed again");
+                getPageLimit();
+            }
         }
     }
-    const realEstateQuery = takeRealEstate(listedHouse);
-    houseObject.realEstate = removeSpaces(realEstateQuery);
-    return houseObject;
 }
 exports.parseHousing = parseHousing;
 const houseArray = [];
@@ -142,7 +155,9 @@ function getFundaPage(pageNumber) {
                     continue;
                 }
                 const houseObject = parseHousing(listedHouse[index]);
-                houseArray.push(houseObject);
+                if (houseObject !== undefined) {
+                    houseArray.push(houseObject);
+                }
             }
         }
         fs_1.default.writeFileSync("./houseDetails.json", JSON.stringify(houseArray));
@@ -178,13 +193,4 @@ function getPages(lastPageNumber) {
         }
     });
 }
-// getPageLimit();
-// getPages();
-// getFundaPage();
-//stap 1: maak getFundaPage herbruikbaar (paginanummer accepteren)
-//stap 2: schrijf een for-loop voor de 85 pagina's
-//stap 3: voordat je gaat loopen, ga op zoek naar het hoogste paginanummer op je pagina
-//stap 4: gebruik dit nummer als hoogste loopnummer
-//stap 5: writefilesync
-//clean up, write tests
-//CELEBRATE, feel like a boss
+getPageLimit();

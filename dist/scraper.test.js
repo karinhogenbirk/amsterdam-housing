@@ -1,4 +1,13 @@
 "use strict";
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
@@ -50,9 +59,9 @@ describe("Create object with house details", () => {
         expect(realEstate).toEqual(expect.any(String));
         expect(realEstate).not.toBe("");
     });
-    test("house object should contain all properties", () => {
+    test("house object should contain all properties", () => __awaiter(void 0, void 0, void 0, function* () {
         var _a, _b, _c, _d, _e, _f, _g;
-        const houseObject = (0, _1.parseHousing)(house);
+        const houseObject = yield (0, _1.parseHousing)(house);
         expect(houseObject).not.toBe(undefined);
         expect((_a = houseObject === null || houseObject === void 0 ? void 0 : houseObject.address) === null || _a === void 0 ? void 0 : _a.length).toBeGreaterThan(0);
         expect((_b = houseObject === null || houseObject === void 0 ? void 0 : houseObject.postalCode) === null || _b === void 0 ? void 0 : _b.length).toBeGreaterThan(0);
@@ -61,5 +70,5 @@ describe("Create object with house details", () => {
         expect((_e = houseObject === null || houseObject === void 0 ? void 0 : houseObject.rooms) === null || _e === void 0 ? void 0 : _e.length).toBeGreaterThan(0);
         expect((_f = houseObject === null || houseObject === void 0 ? void 0 : houseObject.availability) === null || _f === void 0 ? void 0 : _f.length).toBeGreaterThan(0);
         expect((_g = houseObject === null || houseObject === void 0 ? void 0 : houseObject.realEstate) === null || _g === void 0 ? void 0 : _g.length).toBeGreaterThan(0);
-    });
+    }));
 });

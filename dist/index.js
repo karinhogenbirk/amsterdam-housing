@@ -12,11 +12,28 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.parseHousing = exports.takeRealEstate = exports.takeDetails = exports.takePrice = exports.takePostalCode = exports.takeAddress = exports.removeSpaces = void 0;
+exports.parseHousing = exports.takeImage = exports.takeRealEstate = exports.takeDetails = exports.takePrice = exports.takePostalCode = exports.takeAddress = exports.removeSpaces = void 0;
 const scraper_1 = require("./scraper");
 const utils_1 = require("./utils");
 const axios_1 = __importDefault(require("axios"));
-const fs_1 = __importDefault(require("fs"));
+const dotenv_1 = __importDefault(require("dotenv"));
+dotenv_1.default.config();
+const APIKey = process.env.API_KEY;
+function getCoordinates(address) {
+    return __awaiter(this, void 0, void 0, function* () {
+        if (typeof address === "string") {
+            const addressKey = address.replace(" ", "+");
+            const response = yield axios_1.default.get(`https://maps.googleapis.com/maps/api/geocode/json?address=${addressKey}&key=${APIKey}`);
+            const data = response.data;
+            const geometry = data.results[0].geometry;
+            const coordinates = geometry.location;
+            return coordinates;
+        }
+        else {
+            return null;
+        }
+    });
+}
 function removeSpaces(query) {
     if (typeof query === "string") {
         const cleanQuery = query.replace(/\\n]+|[\s]{2,}|[, ]+/g, " ");
@@ -82,62 +99,82 @@ function takeRealEstate(listedHouse) {
     }
 }
 exports.takeRealEstate = takeRealEstate;
+function takeImage(listedHouse) {
+    if (listedHouse !== null) {
+        const imageQuery = listedHouse.querySelector("img");
+        const image = imageQuery === null || imageQuery === void 0 ? void 0 : imageQuery.getAttribute("src");
+        return image;
+    }
+    else {
+        return null;
+    }
+}
+exports.takeImage = takeImage;
 let count = 0;
 let maxTries = 3;
 function parseHousing(listedHouse) {
-    count++;
-    while (true) {
-        try {
-            let houseObject = {
-                address: "",
-                postalCode: "",
-                price: "",
-                size: "",
-                rooms: "",
-                availability: "",
-                realEstate: "",
-            };
-            const addressQuery = takeAddress(listedHouse);
-            houseObject.address = removeSpaces(addressQuery);
-            const postalCodeQuery = takePostalCode(listedHouse);
-            houseObject.postalCode = removeSpaces(postalCodeQuery);
-            const priceQuery = takePrice(listedHouse);
-            const priceWithoutEuro = priceQuery === null || priceQuery === void 0 ? void 0 : priceQuery.replace("€", "");
-            const priceOnlyNumber = priceWithoutEuro === null || priceWithoutEuro === void 0 ? void 0 : priceWithoutEuro.replace("/mnd", "");
-            houseObject.price = priceOnlyNumber;
-            const detailsQuery = takeDetails(listedHouse);
-            const details = removeSpaces(detailsQuery);
-            if (typeof details === "string") {
-                const detailsArray = details === null || details === void 0 ? void 0 : details.split(" ");
-                const squareMeter = detailsArray[1];
-                const availability = detailsArray[5] + " " + detailsArray[6] + " " + detailsArray[7];
-                houseObject.size = squareMeter;
-                const roomCount = detailsArray[3];
-                if (roomCount == "/") {
-                    let takeRoomCount = detailsArray[6];
-                    let takeAvailabily = detailsArray[8] + " " + detailsArray[9] + " " + detailsArray[10];
-                    houseObject.rooms = takeRoomCount;
-                    houseObject.availability = takeAvailabily;
+    return __awaiter(this, void 0, void 0, function* () {
+        count++;
+        while (true) {
+            try {
+                let houseObject = {
+                    address: "",
+                    postalCode: "",
+                    price: "",
+                    size: "",
+                    rooms: "",
+                    availability: "",
+                    realEstate: "",
+                    coordinates: {},
+                    image: "",
+                };
+                const addressQuery = takeAddress(listedHouse);
+                const address = removeSpaces(addressQuery);
+                const coordinates = yield getCoordinates(address);
+                houseObject.coordinates = coordinates;
+                houseObject.address = address;
+                const postalCodeQuery = takePostalCode(listedHouse);
+                houseObject.postalCode = removeSpaces(postalCodeQuery);
+                const priceQuery = takePrice(listedHouse);
+                const priceWithoutEuro = priceQuery === null || priceQuery === void 0 ? void 0 : priceQuery.replace("€", "");
+                const priceOnlyNumber = priceWithoutEuro === null || priceWithoutEuro === void 0 ? void 0 : priceWithoutEuro.replace("/mnd", "");
+                houseObject.price = priceOnlyNumber;
+                const detailsQuery = takeDetails(listedHouse);
+                const details = removeSpaces(detailsQuery);
+                if (typeof details === "string") {
+                    const detailsArray = details === null || details === void 0 ? void 0 : details.split(" ");
+                    const squareMeter = detailsArray[1];
+                    const availability = detailsArray[5] + " " + detailsArray[6] + " " + detailsArray[7];
+                    houseObject.size = squareMeter;
+                    const roomCount = detailsArray[3];
+                    if (roomCount == "/") {
+                        let takeRoomCount = detailsArray[6];
+                        let takeAvailabily = detailsArray[8] + " " + detailsArray[9] + " " + detailsArray[10];
+                        houseObject.rooms = takeRoomCount;
+                        houseObject.availability = takeAvailabily;
+                    }
+                    else {
+                        houseObject.rooms = roomCount;
+                        houseObject.availability = availability;
+                    }
+                }
+                const realEstateQuery = takeRealEstate(listedHouse);
+                houseObject.realEstate = removeSpaces(realEstateQuery);
+                const imageQuery = takeImage(listedHouse);
+                houseObject.image = imageQuery;
+                return houseObject;
+            }
+            catch (error) {
+                if (count === maxTries) {
+                    throw error;
                 }
                 else {
-                    houseObject.rooms = roomCount;
-                    houseObject.availability = availability;
+                    console.log(error, "scraping will be executed again");
+                    getPageLimit();
                 }
             }
-            const realEstateQuery = takeRealEstate(listedHouse);
-            houseObject.realEstate = removeSpaces(realEstateQuery);
-            return houseObject;
         }
-        catch (error) {
-            if (count === maxTries) {
-                throw error;
-            }
-            else {
-                console.log(error, "scraping will be executed again");
-                getPageLimit();
-            }
-        }
-    }
+    });
 }
 exports.parseHousing = parseHousing;
 const houseArray = [];
@@ -154,14 +191,15 @@ function getFundaPage(pageNumber) {
                 if (addressQuery === undefined) {
                     continue;
                 }
-                const houseObject = parseHousing(listedHouse[index]);
+                const houseObject = yield parseHousing(listedHouse[index]);
+                console.log(houseObject);
                 if (houseObject !== undefined) {
                     houseArray.push(houseObject);
                 }
             }
         }
-        fs_1.default.writeFileSync("./houseDetails.json", JSON.stringify(houseArray));
-        console.log(houseArray);
+        // fs.writeFileSync("./houseDetails.json", JSON.stringify(houseArray));
+        // console.log(houseArray);
     });
 }
 function sleep() {
@@ -193,4 +231,6 @@ function getPages(lastPageNumber) {
         }
     });
 }
-getPageLimit();
+// getPageLimit();
+//to test
+// getFundaPage(1);

@@ -62,8 +62,8 @@ describe("Create object with house details", () => {
     expect(realEstate).not.toBe("");
   });
 
-  test("house object should contain all properties", () => {
-    const houseObject = parseHousing(house);
+  test("house object should contain all properties", async () => {
+    const houseObject = await parseHousing(house);
 
     expect(houseObject).not.toBe(undefined);
     expect(houseObject?.address?.length).toBeGreaterThan(0);

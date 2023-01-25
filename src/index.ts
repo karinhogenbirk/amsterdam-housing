@@ -2,6 +2,26 @@ import { parseListings } from "./scraper";
 import { htmlToJSDOM } from "./utils";
 import axios from "axios";
 import fs from "fs";
+import dotenv from "dotenv";
+
+dotenv.config();
+
+const APIKey: string = process.env.API_KEY;
+
+async function getCoordinates(address: string | undefined | null) {
+  if (typeof address === "string") {
+    const addressKey = address.replace(" ", "+");
+    const response = await axios.get(
+      `https://maps.googleapis.com/maps/api/geocode/json?address=${addressKey}&key=${APIKey}`
+    );
+    const data = response.data;
+    const geometry = data.results[0].geometry;
+    const coordinates = geometry.location;
+    return coordinates;
+  } else {
+    return null;
+  }
+}
 
 export function removeSpaces(query: string | undefined | null) {
   if (typeof query === "string") {
@@ -63,10 +83,20 @@ export function takeRealEstate(listedHouse: HTMLElement | null) {
   }
 }
 
+export function takeImage(listedHouse: HTMLElement | null) {
+  if (listedHouse !== null) {
+    const imageQuery = listedHouse.querySelector("img");
+    const image = imageQuery?.getAttribute("src");
+    return image;
+  } else {
+    return null;
+  }
+}
+
 let count = 0;
 let maxTries = 3;
 
-export function parseHousing(listedHouse: HTMLElement | null) {
+export async function parseHousing(listedHouse: HTMLElement | null) {
   count++;
   while (true) {
     try {
@@ -78,10 +108,15 @@ export function parseHousing(listedHouse: HTMLElement | null) {
         rooms: "",
         availability: "",
         realEstate: "",
+        coordinates: {},
+        image: "",
       };
 
       const addressQuery = takeAddress(listedHouse);
-      houseObject.address = removeSpaces(addressQuery);
+      const address = removeSpaces(addressQuery);
+      const coordinates = await getCoordinates(address);
+      houseObject.coordinates = coordinates;
+      houseObject.address = address;
 
       const postalCodeQuery = takePostalCode(listedHouse);
       houseObject.postalCode = removeSpaces(postalCodeQuery);
@@ -115,6 +150,9 @@ export function parseHousing(listedHouse: HTMLElement | null) {
 
       const realEstateQuery = takeRealEstate(listedHouse);
       houseObject.realEstate = removeSpaces(realEstateQuery);
+      const imageQuery = takeImage(listedHouse);
+      houseObject.image = imageQuery;
+
       return houseObject;
     } catch (error) {
       if (count === maxTries) {
@@ -135,6 +173,8 @@ type THouseObject = {
   rooms: string | null | undefined;
   availability: string | null | undefined;
   realEstate: string | null | undefined;
+  coordinates: object;
+  image: string | null | undefined;
 };
 
 const houseArray: Array<object> = [];
@@ -156,14 +196,15 @@ async function getFundaPage(pageNumber: number) {
         continue;
       }
 
-      const houseObject = parseHousing(listedHouse[index]);
+      const houseObject = await parseHousing(listedHouse[index]);
+      console.log(houseObject);
       if (houseObject !== undefined) {
         houseArray.push(houseObject);
       }
     }
   }
-  fs.writeFileSync("./houseDetails.json", JSON.stringify(houseArray));
-  console.log(houseArray);
+  // fs.writeFileSync("./houseDetails.json", JSON.stringify(houseArray));
+  // console.log(houseArray);
 }
 
 function sleep() {
@@ -194,4 +235,7 @@ async function getPages(lastPageNumber: number) {
   }
 }
 
-getPageLimit();
+// getPageLimit();
+
+//to test
+// getFundaPage(1);

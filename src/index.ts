@@ -10,14 +10,17 @@ const APIKey: string = process.env.API_KEY;
 
 async function getCoordinates(address: string | undefined | null) {
   if (typeof address === "string") {
-    const addressKey = address.replace(" ", "+");
     const response = await axios.get(
-      `https://maps.googleapis.com/maps/api/geocode/json?address=${addressKey}&key=${APIKey}`
+      `https://maps.googleapis.com/maps/api/geocode/json?address=${address}&key=${APIKey}`
     );
     const data = response.data;
-    const geometry = data.results[0].geometry;
-    const coordinates = geometry.location;
-    return coordinates;
+    if (data.status === "ZERO_RESULTS") {
+      return "no coordinates available";
+    } else {
+      const geometry = data.results[0].geometry;
+      const coordinates = geometry.location;
+      return coordinates;
+    }
   } else {
     return null;
   }
@@ -114,12 +117,15 @@ export async function parseHousing(listedHouse: HTMLElement | null) {
 
       const addressQuery = takeAddress(listedHouse);
       const address = removeSpaces(addressQuery);
-      const coordinates = await getCoordinates(address);
-      houseObject.coordinates = coordinates;
+
       houseObject.address = address;
 
       const postalCodeQuery = takePostalCode(listedHouse);
-      houseObject.postalCode = removeSpaces(postalCodeQuery);
+      const postalCode = removeSpaces(postalCodeQuery);
+      houseObject.postalCode = postalCode;
+      const fullAddress = address + " " + postalCode;
+      const coordinates = await getCoordinates(fullAddress);
+      houseObject.coordinates = coordinates;
 
       const priceQuery = takePrice(listedHouse);
       const priceWithoutEuro = priceQuery?.replace("€", "");
@@ -203,7 +209,7 @@ async function getFundaPage(pageNumber: number) {
       }
     }
   }
-  // fs.writeFileSync("./houseDetails.json", JSON.stringify(houseArray));
+  fs.writeFileSync("./houseDetails.json", JSON.stringify(houseArray));
   // console.log(houseArray);
 }
 
@@ -235,7 +241,8 @@ async function getPages(lastPageNumber: number) {
   }
 }
 
-// getPageLimit();
+getPageLimit();
 
-//to test
-// getFundaPage(1);
+//to test:
+// getFundaPage(2);
+// getCoordinates("Hellingbaan 326 1033 DB Amsterdam");

@@ -5,6 +5,7 @@ import fs from "fs";
 import dotenv from "dotenv";
 import express, { Application, Request, Response } from "express";
 import { PrismaClient } from "@prisma/client";
+import { v4 as uuidv4 } from "uuid";
 const app: Application = express();
 const prisma = new PrismaClient();
 
@@ -125,6 +126,7 @@ export async function parseHousing(listedHouse: HTMLElement | null) {
   while (true) {
     try {
       let houseObject: THouseObject = {
+        uuid: "",
         address: "",
         postalCode: "",
         rental_price: null,
@@ -138,6 +140,7 @@ export async function parseHousing(listedHouse: HTMLElement | null) {
         url: "",
       };
 
+      houseObject.uuid = uuidv4();
       const addressQuery = takeAddress(listedHouse);
       const address = removeSpaces(addressQuery);
 
@@ -200,6 +203,7 @@ export async function parseHousing(listedHouse: HTMLElement | null) {
 }
 
 type THouseObject = {
+  uuid: string | null | undefined;
   address: string | null | undefined;
   postalCode: string | null | undefined;
   rental_price: number | null;

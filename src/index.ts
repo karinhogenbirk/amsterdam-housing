@@ -5,10 +5,19 @@ import fs from "fs";
 import dotenv from "dotenv";
 import express, { Application, Request, Response } from "express";
 import { PrismaClient } from "@prisma/client";
+const app: Application = express();
+const prisma = new PrismaClient();
 
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+
+const port: number = 3000;
 dotenv.config();
-
 const APIKey: string = process.env.API_KEY;
+
+app.get("/", (_req, res: Response) => {
+  res.send(`Server is running on port: ${port}`);
+});
 
 async function getCoordinates(address: string | undefined | null) {
   if (typeof address === "string") {
@@ -27,18 +36,6 @@ async function getCoordinates(address: string | undefined | null) {
     return null;
   }
 }
-
-const app: Application = express();
-const prisma = new PrismaClient();
-
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
-
-const port: number = 3000;
-
-app.get("/", (_req, res: Response) => {
-  res.send(`Server is running on port: ${port}`);
-});
 
 export function removeSpaces(query: string | undefined | null) {
   if (typeof query === "string") {
@@ -110,6 +107,16 @@ export function takeImage(listedHouse: HTMLElement | null) {
   }
 }
 
+export function takeUrl(listedHouse: HTMLElement | null) {
+  if (listedHouse !== null) {
+    const urlQuery = listedHouse.querySelector("a");
+    const url = "http://www.funda.nl" + urlQuery?.getAttribute("href");
+    return url;
+  } else {
+    return null;
+  }
+}
+
 let count = 0;
 let maxTries = 3;
 
@@ -120,13 +127,15 @@ export async function parseHousing(listedHouse: HTMLElement | null) {
       let houseObject: THouseObject = {
         address: "",
         postalCode: "",
-        price: "",
-        size: "",
-        rooms: "",
-        availability: "",
+        rental_price: null,
+        floor_area: null,
+        room_count: null,
+        availability_status: "",
         realEstate: "",
-        coordinates: {},
+        latitude: null,
+        longitude: null,
         image: "",
+        url: "",
       };
 
       const addressQuery = takeAddress(listedHouse);
@@ -139,12 +148,15 @@ export async function parseHousing(listedHouse: HTMLElement | null) {
       houseObject.postalCode = postalCode;
       const fullAddress = address + " " + postalCode;
       const coordinates = await getCoordinates(fullAddress);
-      houseObject.coordinates = coordinates;
+      const latitude = coordinates.lat;
+      const longitude = coordinates.lng;
+      houseObject.latitude = latitude;
+      houseObject.longitude = longitude;
 
       const priceQuery = takePrice(listedHouse);
       const priceWithoutEuro = priceQuery?.replace("€", "");
       const priceOnlyNumber = priceWithoutEuro?.replace("/mnd", "");
-      houseObject.price = priceOnlyNumber;
+      houseObject.rental_price = Number(priceOnlyNumber) * 1000;
 
       const detailsQuery = takeDetails(listedHouse);
 
@@ -154,17 +166,17 @@ export async function parseHousing(listedHouse: HTMLElement | null) {
         const squareMeter = detailsArray[1];
         const availability =
           detailsArray[5] + " " + detailsArray[6] + " " + detailsArray[7];
-        houseObject.size = squareMeter;
+        houseObject.floor_area = Number(squareMeter);
         const roomCount = detailsArray[3];
         if (roomCount == "/") {
           let takeRoomCount = detailsArray[6];
           let takeAvailabily =
             detailsArray[8] + " " + detailsArray[9] + " " + detailsArray[10];
-          houseObject.rooms = takeRoomCount;
-          houseObject.availability = takeAvailabily;
+          houseObject.room_count = Number(takeRoomCount);
+          houseObject.availability_status = takeAvailabily;
         } else {
-          houseObject.rooms = roomCount;
-          houseObject.availability = availability;
+          houseObject.room_count = Number(roomCount);
+          houseObject.availability_status = availability;
         }
       }
 
@@ -172,6 +184,8 @@ export async function parseHousing(listedHouse: HTMLElement | null) {
       houseObject.realEstate = removeSpaces(realEstateQuery);
       const imageQuery = takeImage(listedHouse);
       houseObject.image = imageQuery;
+      const urlQuery = takeUrl(listedHouse);
+      houseObject.url = urlQuery;
 
       return houseObject;
     } catch (error) {
@@ -188,13 +202,15 @@ export async function parseHousing(listedHouse: HTMLElement | null) {
 type THouseObject = {
   address: string | null | undefined;
   postalCode: string | null | undefined;
-  price: string | null | undefined;
-  size: string | null | undefined;
-  rooms: string | null | undefined;
-  availability: string | null | undefined;
+  rental_price: number | null;
+  floor_area: number | null;
+  room_count: number | null;
+  availability_status: string | null | undefined;
   realEstate: string | null | undefined;
-  coordinates: object;
+  latitude: number | null;
+  longitude: number | null;
   image: string | null | undefined;
+  url: string | null | undefined;
 };
 
 const houseArray: Array<object> = [];
@@ -223,7 +239,7 @@ async function getFundaPage(pageNumber: number) {
       }
     }
   }
-  fs.writeFileSync("./houseDetails.json", JSON.stringify(houseArray));
+  // fs.writeFileSync("./houseDetails.json", JSON.stringify(houseArray));
   // console.log(houseArray);
 }
 
@@ -255,8 +271,8 @@ async function getPages(lastPageNumber: number) {
   }
 }
 
-getPageLimit();
+// getPageLimit();
 
 //to test:
-// getFundaPage(2);
+getFundaPage(1);
 // getCoordinates("Hellingbaan 326 1033 DB Amsterdam");

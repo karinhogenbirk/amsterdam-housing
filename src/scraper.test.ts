@@ -7,7 +7,6 @@ import {
   takeAddress,
   takeDetails,
   takePostalCode,
-  takePrice,
   takeRealEstate,
 } from ".";
 
@@ -44,12 +43,6 @@ describe("Create object with house details", () => {
     expect(postalCode).not.toBe("");
   });
 
-  test("should return price", () => {
-    const price = takePrice(house);
-    expect(price).toEqual(expect.any(String));
-    expect(price).not.toBe("");
-  });
-
   test("should return details", () => {
     const details = takeDetails(house);
     expect(details).toEqual(expect.any(String));
@@ -68,10 +61,14 @@ describe("Create object with house details", () => {
     expect(houseObject).not.toBe(undefined);
     expect(houseObject?.address?.length).toBeGreaterThan(0);
     expect(houseObject?.postalCode?.length).toBeGreaterThan(0);
-    expect(houseObject?.price?.length).toBeGreaterThan(0);
-    expect(houseObject?.size?.length).toBeGreaterThan(0);
-    expect(houseObject?.rooms?.length).toBeGreaterThan(0);
-    expect(houseObject?.availability?.length).toBeGreaterThan(0);
+    expect(houseObject?.rental_price).toBeGreaterThan(0);
+    expect(houseObject?.floor_area).toBeGreaterThan(0);
+    expect(houseObject?.room_count).toBeGreaterThan(0);
+    expect(houseObject?.availability_status?.length).toBeGreaterThan(0);
     expect(houseObject?.realEstate?.length).toBeGreaterThan(0);
+    expect(houseObject?.latitude).toBeGreaterThan(0);
+    expect(houseObject?.longitude).toBeGreaterThan(0);
+    expect(houseObject?.url?.length).toBeGreaterThan(0);
+    expect(houseObject?.image?.length).toBeGreaterThan(0);
   });
 });

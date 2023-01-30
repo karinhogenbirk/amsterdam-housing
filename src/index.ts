@@ -65,17 +65,6 @@ export function takePostalCode(listedHouse: HTMLElement | null) {
   }
 }
 
-export function takePrice(listedHouse: HTMLElement | null) {
-  if (listedHouse !== null) {
-    const priceQuery = listedHouse.querySelector(
-      ".search-result-price"
-    )?.textContent;
-    return priceQuery;
-  } else {
-    return null;
-  }
-}
-
 export function takeDetails(listedHouse: HTMLElement | null) {
   if (listedHouse !== null) {
     const detailsQuery = listedHouse.querySelector(
@@ -130,6 +119,7 @@ export async function parseHousing(listedHouse: HTMLElement | null) {
         address: "",
         postalCode: "",
         rental_price: null,
+        asking_price: null,
         floor_area: null,
         room_count: null,
         availability_status: "",
@@ -138,6 +128,7 @@ export async function parseHousing(listedHouse: HTMLElement | null) {
         longitude: null,
         image: "",
         url: "",
+        for_sale: null,
       };
 
       houseObject.uuid = uuidv4();
@@ -156,10 +147,26 @@ export async function parseHousing(listedHouse: HTMLElement | null) {
       houseObject.latitude = latitude;
       houseObject.longitude = longitude;
 
-      const priceQuery = takePrice(listedHouse);
-      const priceWithoutEuro = priceQuery?.replace("€", "");
-      const priceOnlyNumber = priceWithoutEuro?.replace("/mnd", "");
-      houseObject.rental_price = Number(priceOnlyNumber) * 1000;
+      const priceQuery = listedHouse?.querySelectorAll(".search-result-price");
+      if (priceQuery !== undefined) {
+        for (let index = 0; index < priceQuery.length; index++) {
+          const price = priceQuery[index].textContent;
+          if (price?.includes("k.k.")) {
+            const trimmedPrice = price
+              .replace("€", "")
+              .replace("k.k.", "")
+              .replace(".", "");
+            houseObject.asking_price = Number(trimmedPrice) * 1000;
+            houseObject.for_sale = true;
+          } else {
+            const priceWithoutEuro = price
+              ?.replace("€", "")
+              .replace("/mnd", "");
+            houseObject.rental_price = Number(priceWithoutEuro) * 1000;
+            houseObject.for_sale = false;
+          }
+        }
+      }
 
       const detailsQuery = takeDetails(listedHouse);
 
@@ -207,6 +214,7 @@ type THouseObject = {
   address: string | null | undefined;
   postalCode: string | null | undefined;
   rental_price: number | null;
+  asking_price: number | null;
   floor_area: number | null;
   room_count: number | null;
   availability_status: string | null | undefined;
@@ -215,6 +223,7 @@ type THouseObject = {
   longitude: number | null;
   image: string | null | undefined;
   url: string | null | undefined;
+  for_sale: boolean | null;
 };
 
 const houseArray: Array<object> = [];

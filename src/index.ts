@@ -158,11 +158,17 @@ export async function parseHousing(listedHouse: HTMLElement | null) {
               .replace(".", "");
             houseObject.asking_price = Number(trimmedPrice) * 1000;
             houseObject.for_sale = true;
+          } else if (price?.includes("Van")) {
+            const priceArray = price.split(" ");
+            const trimmedPrice = priceArray[2];
+            houseObject.rental_price = Number(trimmedPrice.replace(".", ""));
+            houseObject.for_sale = false;
           } else {
             const priceWithoutEuro = price
               ?.replace("€", "")
-              .replace("/mnd", "");
-            houseObject.rental_price = Number(priceWithoutEuro) * 1000;
+              .replace("/mnd", "")
+              .replace(".", "");
+            houseObject.rental_price = Number(priceWithoutEuro);
             houseObject.for_sale = false;
           }
         }
@@ -173,21 +179,67 @@ export async function parseHousing(listedHouse: HTMLElement | null) {
       const details: string | null | undefined = removeSpaces(detailsQuery);
       if (typeof details === "string") {
         const detailsArray: Array<string> = details?.split(" ");
-        const squareMeter = detailsArray[1];
-        const availability =
-          detailsArray[5] + " " + detailsArray[6] + " " + detailsArray[7];
-        houseObject.floor_area = Number(squareMeter);
-        const roomCount = detailsArray[3];
-        if (roomCount == "/") {
-          let takeRoomCount = detailsArray[6];
-          let takeAvailabily =
-            detailsArray[8] + " " + detailsArray[9] + " " + detailsArray[10];
-          houseObject.room_count = Number(takeRoomCount);
-          houseObject.availability_status = takeAvailabily;
+        //SCENARIOS:
+        //zonder kamers:
+        //1. met streepje: [ '', '83', '-', '130', 'm²', '' ]
+        //2. zonder streepje: [ '', '1.000', 'm²', '' ]
+        if (detailsArray.includes("kamers") === false) {
+          houseObject.room_count = null;
+          if (detailsArray.includes("-")) {
+            const availability =
+              detailsArray[7] + " " + detailsArray[8] + " " + detailsArray[9];
+            if (availability.includes("undefined")) {
+              houseObject.availability_status = "Unknown";
+            } else {
+              houseObject.availability_status = availability;
+            }
+          } else {
+            const availability =
+              detailsArray[5] + " " + detailsArray[6] + " " + detailsArray[7];
+            if (availability.includes("undefined")) {
+              houseObject.availability_status = "Unknown";
+            } else {
+              houseObject.availability_status = availability;
+            }
+          }
+          //met kamers:
+          //1. met streepje: [ '', '70', '-', '222', 'm²', '3', 'kamers', '' ]
+          //2. zonder streepje: [ '', '150', 'm²', '4', 'kamers', '' ]
+          //3. zonder streepje met /
         } else {
-          houseObject.room_count = Number(roomCount);
-          houseObject.availability_status = availability;
+          if (detailsArray.includes("-")) {
+            houseObject.room_count = Number(detailsArray[5]);
+            const availability =
+              detailsArray[7] + " " + detailsArray[8] + " " + detailsArray[9];
+            if (availability.includes("undefined")) {
+              houseObject.availability_status = "Unknown";
+            } else {
+              houseObject.availability_status = availability;
+            }
+          } else if (detailsArray[3] == "/") {
+            let takeRoomCount = detailsArray[6];
+            let availability =
+              detailsArray[8] + " " + detailsArray[9] + " " + detailsArray[10];
+            if (availability.includes("undefined")) {
+              houseObject.availability_status = "Unknown";
+            } else {
+              houseObject.availability_status = availability;
+            }
+            houseObject.room_count = Number(takeRoomCount);
+          } else {
+            const availability =
+              detailsArray[5] + " " + detailsArray[6] + " " + detailsArray[7];
+            if (availability.includes("undefined")) {
+              houseObject.availability_status = "Unknown";
+            } else {
+              houseObject.availability_status = availability;
+            }
+            houseObject.room_count = Number(detailsArray[3]);
+          }
         }
+
+        const squareMeter = detailsArray[1];
+        houseObject.floor_area = Number(squareMeter);
       }
 
       const realEstateQuery = takeRealEstate(listedHouse);
@@ -258,7 +310,7 @@ async function getFundaPage(pageNumber: number) {
 
 function sleep() {
   return new Promise(function (resolve) {
-    setTimeout(resolve, 10000);
+    setTimeout(resolve, 5000);
   });
 }
 
@@ -287,5 +339,5 @@ async function getPages(lastPageNumber: number) {
 // getPageLimit();
 
 //to test:
-getFundaPage(1);
+getFundaPage(4);
 // getCoordinates("Hellingbaan 326 1033 DB Amsterdam");

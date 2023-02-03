@@ -10,15 +10,37 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model houseDetails {
-  id Int @id @default(autoincrement())
+model HouseDetails {
+  rentalHouse RentalHouse?
+  salesHouse SalesHouse?
+  uuid String @id @default(uuid())
   address String
   postcalCode String
-  price String
-  size String
-  rooms String
-  availability String
-  realEstate String
-  coordinates String
-  image String
+  floorArea Int?
+  roomCount Int?
+  availabilityStatus String
+  latitude Float
+  longitude Float
+  image String? @db.VarChar(300)
+  url String @db.VarChar(300)
+  realEstateAgentID Int
+  realEstateAgent RealEstateAgent @relation(fields: [realEstateAgentID], references: [id])
+}
+
+model RentalHouse {
+  houseId String @id @default(uuid())
+  houseDetails HouseDetails @relation(fields: [houseId], references: [uuid])
+  priceMonthly Float
+}
+
+model SalesHouse {
+  houseId String @id @default(uuid())
+  houseDetails HouseDetails @relation(fields: [houseId], references: [uuid])
+  askingPrice Float
+}
+
+model RealEstateAgent {
+  properties HouseDetails[]
+  id Int @default(autoincrement()) @unique
+  name String
 }

@@ -1,24 +1,18 @@
 import { parseListings } from "./scraper";
 import { htmlToJSDOM } from "./utils";
 import axios from "axios";
-import fs from "fs";
+import fs, { truncate } from "fs";
 import dotenv from "dotenv";
-import express, { Application, Request, Response } from "express";
-import { PrismaClient } from "@prisma/client";
-import { v4 as uuidv4 } from "uuid";
-const app: Application = express();
-const prisma = new PrismaClient();
-
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
-
-const port: number = 3000;
 dotenv.config();
+import { v4 as uuidv4 } from "uuid";
 const APIKey: string = process.env.API_KEY;
 
-app.get("/", (_req, res: Response) => {
-  res.send(`Server is running on port: ${port}`);
-});
+function clearHouseDetails() {
+  truncate("houseDetails.json", (err) => {
+    if (err) throw err;
+    console.log("houseDetails.json was truncated");
+  });
+}
 
 async function getCoordinates(address: string | undefined | null) {
   if (typeof address === "string") {
@@ -118,17 +112,17 @@ export async function parseHousing(listedHouse: HTMLElement | null) {
         uuid: "",
         address: "",
         postalCode: "",
-        rental_price: null,
-        asking_price: null,
-        floor_area: null,
-        room_count: null,
-        availability_status: "",
+        rentalPrice: null,
+        askingPrice: null,
+        floorArea: null,
+        roomCount: null,
+        availabilityStatus: "",
         realEstate: "",
         latitude: null,
         longitude: null,
         image: "",
         url: "",
-        for_sale: null,
+        forSale: null,
       };
 
       houseObject.uuid = uuidv4();
@@ -156,20 +150,20 @@ export async function parseHousing(listedHouse: HTMLElement | null) {
               .replace("€", "")
               .replace("k.k.", "")
               .replace(".", "");
-            houseObject.asking_price = Number(trimmedPrice) * 1000;
-            houseObject.for_sale = true;
+            houseObject.askingPrice = Number(trimmedPrice) * 1000;
+            houseObject.forSale = true;
           } else if (price?.includes("Van")) {
             const priceArray = price.split(" ");
             const trimmedPrice = priceArray[2];
-            houseObject.rental_price = Number(trimmedPrice.replace(".", ""));
-            houseObject.for_sale = false;
+            houseObject.rentalPrice = Number(trimmedPrice.replace(".", ""));
+            houseObject.forSale = false;
           } else {
             const priceWithoutEuro = price
               ?.replace("€", "")
               .replace("/mnd", "")
               .replace(".", "");
-            houseObject.rental_price = Number(priceWithoutEuro);
-            houseObject.for_sale = false;
+            houseObject.rentalPrice = Number(priceWithoutEuro);
+            houseObject.forSale = false;
           }
         }
       }
@@ -184,22 +178,22 @@ export async function parseHousing(listedHouse: HTMLElement | null) {
         //1. met streepje: [ '', '83', '-', '130', 'm²', '' ]
         //2. zonder streepje: [ '', '1.000', 'm²', '' ]
         if (detailsArray.includes("kamers") === false) {
-          houseObject.room_count = null;
+          houseObject.roomCount = null;
           if (detailsArray.includes("-")) {
             const availability =
               detailsArray[7] + " " + detailsArray[8] + " " + detailsArray[9];
             if (availability.includes("undefined")) {
-              houseObject.availability_status = "Unknown";
+              houseObject.availabilityStatus = "Unknown";
             } else {
-              houseObject.availability_status = availability;
+              houseObject.availabilityStatus = availability;
             }
           } else {
             const availability =
               detailsArray[5] + " " + detailsArray[6] + " " + detailsArray[7];
             if (availability.includes("undefined")) {
-              houseObject.availability_status = "Unknown";
+              houseObject.availabilityStatus = "Unknown";
             } else {
-              houseObject.availability_status = availability;
+              houseObject.availabilityStatus = availability;
             }
           }
           //met kamers:
@@ -208,38 +202,38 @@ export async function parseHousing(listedHouse: HTMLElement | null) {
           //3. zonder streepje met /
         } else {
           if (detailsArray.includes("-")) {
-            houseObject.room_count = Number(detailsArray[5]);
+            houseObject.roomCount = Number(detailsArray[5]);
             const availability =
               detailsArray[7] + " " + detailsArray[8] + " " + detailsArray[9];
             if (availability.includes("undefined")) {
-              houseObject.availability_status = "Unknown";
+              houseObject.availabilityStatus = "Unknown";
             } else {
-              houseObject.availability_status = availability;
+              houseObject.availabilityStatus = availability;
             }
           } else if (detailsArray[3] == "/") {
             let takeRoomCount = detailsArray[6];
             let availability =
               detailsArray[8] + " " + detailsArray[9] + " " + detailsArray[10];
             if (availability.includes("undefined")) {
-              houseObject.availability_status = "Unknown";
+              houseObject.availabilityStatus = "Unknown";
             } else {
-              houseObject.availability_status = availability;
+              houseObject.availabilityStatus = availability;
             }
-            houseObject.room_count = Number(takeRoomCount);
+            houseObject.roomCount = Number(takeRoomCount);
           } else {
             const availability =
               detailsArray[5] + " " + detailsArray[6] + " " + detailsArray[7];
             if (availability.includes("undefined")) {
-              houseObject.availability_status = "Unknown";
+              houseObject.availabilityStatus = "Unknown";
             } else {
-              houseObject.availability_status = availability;
+              houseObject.availabilityStatus = availability;
             }
-            houseObject.room_count = Number(detailsArray[3]);
+            houseObject.roomCount = Number(detailsArray[3]);
           }
         }
 
         const squareMeter = detailsArray[1];
-        houseObject.floor_area = Number(squareMeter);
+        houseObject.floorArea = Number(squareMeter);
       }
 
       const realEstateQuery = takeRealEstate(listedHouse);
@@ -265,17 +259,17 @@ type THouseObject = {
   uuid: string | null | undefined;
   address: string | null | undefined;
   postalCode: string | null | undefined;
-  rental_price: number | null;
-  asking_price: number | null;
-  floor_area: number | null;
-  room_count: number | null;
-  availability_status: string | null | undefined;
+  rentalPrice: number | null;
+  askingPrice: number | null;
+  floorArea: number | null;
+  roomCount?: number | null;
+  availabilityStatus: string | null | undefined;
   realEstate: string | null | undefined;
   latitude: number | null;
   longitude: number | null;
   image: string | null | undefined;
   url: string | null | undefined;
-  for_sale: boolean | null;
+  forSale: boolean | null;
 };
 
 const houseArray: Array<object> = [];
@@ -304,7 +298,7 @@ async function getFundaPage(pageNumber: number) {
       }
     }
   }
-  // fs.writeFileSync("./houseDetails.json", JSON.stringify(houseArray));
+  fs.writeFileSync("./houseDetails.json", JSON.stringify(houseArray));
   // console.log(houseArray);
 }
 
@@ -315,6 +309,7 @@ function sleep() {
 }
 
 async function getPageLimit() {
+  clearHouseDetails();
   const response = await axios.get(`https://www.funda.nl/huur/amsterdam/`);
   const html = response.data;
   const doc = htmlToJSDOM(html);
@@ -336,8 +331,9 @@ async function getPages(lastPageNumber: number) {
   }
 }
 
-// getPageLimit();
+getPageLimit();
 
 //to test:
-getFundaPage(4);
+// getFundaPage(4);
 // getCoordinates("Hellingbaan 326 1033 DB Amsterdam");
+//clearHouseDetails();

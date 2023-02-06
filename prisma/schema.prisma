@@ -23,8 +23,8 @@ model HouseDetails {
   longitude Float
   image String? @db.VarChar(300)
   url String @db.VarChar(300)
-  realEstateAgentID Int
-  realEstateAgent RealEstateAgent @relation(fields: [realEstateAgentID], references: [id])
+  realEstateAgentID Int?
+  realEstateAgent RealEstateAgent? @relation(fields: [realEstateAgentID], references: [id])
 }
 
 model RentalHouse {

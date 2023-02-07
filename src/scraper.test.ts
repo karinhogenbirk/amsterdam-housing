@@ -61,10 +61,10 @@ describe("Create object with house details", () => {
     expect(houseObject).not.toBe(undefined);
     expect(houseObject?.address?.length).toBeGreaterThan(0);
     expect(houseObject?.postalCode?.length).toBeGreaterThan(0);
-    expect(houseObject?.rental_price).toBeGreaterThan(0);
-    expect(houseObject?.floor_area).toBeGreaterThan(0);
-    expect(houseObject?.room_count).toBeGreaterThan(0);
-    expect(houseObject?.availability_status?.length).toBeGreaterThan(0);
+    expect(houseObject?.rentalPrice).toBeGreaterThan(0);
+    expect(houseObject?.floorArea).toBeGreaterThan(0);
+    expect(houseObject?.roomCount).toBeGreaterThan(0);
+    expect(houseObject?.availabilityStatus?.length).toBeGreaterThan(0);
     expect(houseObject?.realEstate?.length).toBeGreaterThan(0);
     expect(houseObject?.latitude).toBeGreaterThan(0);
     expect(houseObject?.longitude).toBeGreaterThan(0);

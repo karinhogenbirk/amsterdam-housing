@@ -15,5 +15,7 @@ jobs:
           node-version: "16"
       - run: npm install
       - run: npm run scrape
+      - run: npm run prisma:clear:production
+      - run: npm run prisma:seed:production
 
 

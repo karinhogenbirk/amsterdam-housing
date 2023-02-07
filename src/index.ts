@@ -3,7 +3,7 @@ import { htmlToJSDOM } from "./utils";
 import axios from "axios";
 import fs, { truncate } from "fs";
 import dotenv from "dotenv";
-dotenv.config();
+dotenv.config({ path: ".env.local" });
 import { v4 as uuidv4 } from "uuid";
 const APIKey: string = process.env.API_KEY;
 

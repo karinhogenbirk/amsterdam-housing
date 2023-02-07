@@ -108,22 +108,6 @@ async function seedDB() {
   }
 }
 
-async function clearDB() {
-  const clearRentalDB = await prisma.rentalHouse.deleteMany({
-    where: {},
-  });
-  const clearSalesDB = await prisma.salesHouse.deleteMany({
-    where: {},
-  });
-
-  const clearHouses = await prisma.houseDetails.deleteMany({
-    where: {},
-  });
-  const clearRealEstateDB = await prisma.realEstateAgent.deleteMany({
-    where: {},
-  });
-}
-
 seedDB()
   .then(async () => {
     await prisma.$disconnect();
@@ -133,5 +117,3 @@ seedDB()
     await prisma.$disconnect();
     process.exit(1);
   });
-
-// clearDB();

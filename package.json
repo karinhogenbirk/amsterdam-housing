@@ -9,7 +9,8 @@
     "scrape": "node dist/src/index.js",
     "start": "node dist/src/app.js",
     "refresh-test-html": "npx ts-node src/testdata/gettestdata.ts",
-    "seed:db": "node dist/prisma/seeders/seeder.js"
+    "seed:db": "node dist/prisma/seeders/seeder.js",
+    "clear:db": "node dist/prisma/seeders/cleardb.js"
   },
   "keywords": [],
   "author": "",

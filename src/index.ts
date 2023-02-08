@@ -3,7 +3,8 @@ import { htmlToJSDOM } from "./utils";
 import axios from "axios";
 import fs, { truncate } from "fs";
 import dotenv from "dotenv";
-dotenv.config({ path: ".env.local" });
+dotenv.config();
+console.log(process.env);
 import { v4 as uuidv4 } from "uuid";
 const APIKey: string = process.env.API_KEY;
 
@@ -333,7 +334,7 @@ async function getPages(lastPageNumber: number) {
 
 getPageLimit();
 
-//to test:
-// getFundaPage(4);
-// getCoordinates("Hellingbaan 326 1033 DB Amsterdam");
-//clearHouseDetails();
+to test:
+getFundaPage(4);
+getCoordinates("Hellingbaan 326 1033 DB Amsterdam");
+clearHouseDetails();

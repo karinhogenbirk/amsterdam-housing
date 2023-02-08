@@ -1,4 +1,6 @@
 const houses: Array<THouseObject> = require("/Users/karin/Code/amsterdamHousing/houseDetails.json");
+import dotenv from "dotenv";
+dotenv.config();
 import { PrismaClient } from "@prisma/client";
 const prisma = new PrismaClient();
 

@@ -10,7 +10,10 @@
     "start": "node dist/src/app.js",
     "refresh-test-html": "npx ts-node src/testdata/gettestdata.ts",
     "seed:db": "node dist/prisma/seeders/seeder.js",
-    "clear:db": "node dist/prisma/seeders/cleardb.js"
+    "clear:db": "node dist/prisma/seeders/cleardb.js",
+    "prisma:migrate:production": "dotenv -e .env.production npx prisma migrate deploy",
+    "prisma:seed:production": "dotenv -e .env.production npm run seed:db",
+    "prisma:clear:production": "dotenv -e .env.production npm run clear:db"
   },
   "keywords": [],
   "author": "",
@@ -32,6 +35,7 @@
     "axios": "^1.2.3",
     "docker": "^1.0.0",
     "dotenv": "^16.0.3",
+    "dotenv-cli": "^7.0.0",
     "express": "^4.18.2",
     "fs": "^0.0.1-security",
     "jest": "^29.3.1",

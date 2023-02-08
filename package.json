@@ -4,26 +4,39 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "test": "npx jest",
     "test:watch": "npx jest --watch",
-    "start": "node dist/index.js",
-    "refresh-test-html": "npx ts-node src/testdata/gettestdata.ts"
+    "scrape": "node dist/src/index.js",
+    "start": "node dist/src/app.js",
+    "refresh-test-html": "npx ts-node src/testdata/gettestdata.ts",
+    "seed:db": "node dist/prisma/seeders/seeder.js",
+    "clear:db": "node dist/prisma/seeders/cleardb.js"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "devDependencies": {
+    "@types/express": "^4.17.16",
     "@types/jest": "^29.2.6",
     "@types/node": "^18.11.18",
+    "@types/uuid": "^9.0.0",
+    "prisma": "^4.9.0",
     "ts-jest": "^29.0.5",
+    "ts-node": "^10.9.1",
     "typescript": "^4.9.4"
   },
   "dependencies": {
+    "@prisma/client": "^4.9.0",
+    "@types/dotenv": "^8.2.0",
     "@types/jsdom": "^20.0.1",
     "axios": "^1.2.3",
+    "docker": "^1.0.0",
+    "dotenv": "^16.0.3",
+    "express": "^4.18.2",
     "fs": "^0.0.1-security",
     "jest": "^29.3.1",
     "jsdom": "^21.0.0",
-    "trim-newlines": "^4.0.2"
+    "trim-newlines": "^4.0.2",
+    "uuid": "^9.0.0"
   }
 }

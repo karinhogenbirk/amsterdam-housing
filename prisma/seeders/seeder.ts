@@ -26,7 +26,9 @@ type TRealEstateAgent = {
   id?: number;
 };
 
-function createRealEstateArray() {
+export function createRealEstateArray(
+  houses: Array<THouseObject>
+): Array<TRealEstateAgent> {
   const realEstateArray: Array<TRealEstateAgent> = [];
   for (let index = 0; index < houses.length; index++) {
     const house: THouseObject = houses[index];
@@ -37,7 +39,7 @@ function createRealEstateArray() {
   return removeDuplicates(realEstateArray);
 }
 
-function removeDuplicates(array: Array<TRealEstateAgent>) {
+export function removeDuplicates(array: Array<TRealEstateAgent>) {
   const removeDuplicates = array.filter((value, index) => {
     const _value: string = JSON.stringify(value);
     return (
@@ -53,7 +55,7 @@ function removeDuplicates(array: Array<TRealEstateAgent>) {
 
 async function seedDB() {
   const realEstateDataBase = await prisma.realEstateAgent.createMany({
-    data: createRealEstateArray(),
+    data: createRealEstateArray(houses),
   });
 
   const getRealEstates = await prisma.realEstateAgent.findMany({

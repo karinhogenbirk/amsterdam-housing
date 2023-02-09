@@ -9,6 +9,10 @@ import {
   takePostalCode,
   takeRealEstate,
 } from ".";
+import {
+  createRealEstateArray,
+  removeDuplicates,
+} from "../prisma/seeders/seeder";
 
 describe("Find house listings", () => {
   test("should find all ordered lists", () => {
@@ -70,5 +74,64 @@ describe("Create object with house details", () => {
     expect(houseObject?.longitude).toBeGreaterThan(0);
     expect(houseObject?.url?.length).toBeGreaterThan(0);
     expect(houseObject?.image?.length).toBeGreaterThan(0);
+  });
+});
+
+describe.only("Test seeding file", () => {
+  test("Should return array of real estate agents without duplicates", async () => {
+    const houses = [
+      {
+        uuid: "cc1ef256-58d7-41e7-b3f1-6b58d9c174ca",
+        address: " Vossiusstraat 53 D ",
+        postalCode: " 1071 AK Amsterdam ",
+        rentalPrice: 2800,
+        askingPrice: null,
+        floorArea: 84,
+        roomCount: 2,
+        availabilityStatus: "Beschikbaar per 1-3-2023",
+        realEstate: "Heeren Makelaars",
+        latitude: 52.35985609999999,
+        longitude: 4.876808599999999,
+        image: "https://cloud.funda.nl/valentina_media/169/343/794_720x480.jpg",
+        url: "http://www.funda.nl/huur/amsterdam/appartement-42072270-vossiusstraat-53-d/",
+        forSale: false,
+      },
+      {
+        uuid: "cc816bc6-40bf-4932-b3fa-d74d75db9a56",
+        address: " Ruysdaelkade 81 HS ",
+        postalCode: " 1072 AL Amsterdam ",
+        rentalPrice: 3000,
+        askingPrice: 950000000,
+        floorArea: 114,
+        roomCount: 4,
+        availabilityStatus: "In overleg ",
+        realEstate: "Heeren Makelaars",
+        latitude: 52.3560832,
+        longitude: 4.8870935,
+        image: "https://cloud.funda.nl/valentina_media/170/506/553_720x480.jpg",
+        url: "http://www.funda.nl/huur/amsterdam/appartement-42001491-ruysdaelkade-81-hs/",
+        forSale: true,
+      },
+      {
+        uuid: "a9e4bd86-1f93-42d8-b40d-b1ed88a3e966",
+        address: " Prinsengracht 516 ",
+        postalCode: " 1017 KJ Amsterdam ",
+        rentalPrice: 12000,
+        askingPrice: null,
+        floorArea: 569,
+        roomCount: 8,
+        availabilityStatus: "Per direct beschikbaar",
+        realEstate: "Ter Haar Makelaars B.V.",
+        latitude: 52.3634447,
+        longitude: 4.8860008,
+        image: "https://cloud.funda.nl/valentina_media/168/600/419_720x480.jpg",
+        url: "http://www.funda.nl/huur/amsterdam/huis-42053705-prinsengracht-516/",
+        forSale: false,
+      },
+    ];
+
+    const realEstateArray = await createRealEstateArray(houses);
+
+    expect(realEstateArray.length).toBe(2);
   });
 });

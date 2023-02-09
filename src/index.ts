@@ -334,7 +334,7 @@ async function getPages(lastPageNumber: number) {
 
 getPageLimit();
 
-to test:
-getFundaPage(4);
-getCoordinates("Hellingbaan 326 1033 DB Amsterdam");
-clearHouseDetails();
+// to test:
+// getFundaPage(4);
+// getCoordinates("Hellingbaan 326 1033 DB Amsterdam");
+// clearHouseDetails();

@@ -39,18 +39,17 @@ export function createRealEstateArray(
   return removeDuplicates(realEstateArray);
 }
 
-export function removeDuplicates(array: Array<TRealEstateAgent>) {
-  const removeDuplicates = array.filter((value, index) => {
-    const _value: string = JSON.stringify(value);
-    return (
-      index ===
-      array.findIndex((obj) => {
-        return JSON.stringify(obj) === _value;
-      })
-    );
+export function removeDuplicates(
+  array: Array<TRealEstateAgent>
+): Array<TRealEstateAgent> {
+  const seen = new Set();
+  const removedDuplicates = array.filter((agent) => {
+    const duplicate = seen.has(agent.name);
+    seen.add(agent.name);
+    return !duplicate;
   });
-  // console.log(removeDuplicates);
-  return removeDuplicates;
+
+  return removedDuplicates;
 }
 
 async function seedDB() {

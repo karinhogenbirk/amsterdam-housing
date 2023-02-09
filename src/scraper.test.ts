@@ -132,6 +132,8 @@ describe.only("Test seeding file", () => {
 
     const realEstateArray = await createRealEstateArray(houses);
 
+    console.log(realEstateArray);
+
     expect(realEstateArray.length).toBe(2);
   });
 });

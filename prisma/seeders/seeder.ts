@@ -1,7 +1,12 @@
 const houses: Array<THouseObject> = require("/Users/karin/Code/amsterdamHousing/houseDetails.json");
 import dotenv from "dotenv";
 dotenv.config();
-import { PrismaClient } from "@prisma/client";
+import {
+  HouseDetails,
+  PrismaClient,
+  RentalHouse,
+  SalesHouse,
+} from "@prisma/client";
 const prisma = new PrismaClient();
 
 type THouseObject = {
@@ -39,6 +44,72 @@ export function createRealEstateArray(
   return removeDuplicates(realEstateArray);
 }
 
+export function createHouseArray(
+  houses: Array<THouseObject>,
+  getRealEstates: Array<TRealEstateAgent>
+): Array<HouseDetails> {
+  const houseArray: Array<HouseDetails> = [];
+
+  for (let index = 0; index < houses.length; index++) {
+    const house: THouseObject = houses[index];
+    const estatesFind = getRealEstates.find((realEstate) => {
+      if (realEstate.name === house.realEstate) {
+        return realEstate;
+      }
+    });
+    const houseObject: HouseDetails = {
+      uuid: house.uuid,
+      address: house.address,
+      postcalCode: house.postalCode,
+      floorArea: house.floorArea as number | null,
+      roomCount: house.roomCount as number | null,
+      availabilityStatus: house.availabilityStatus,
+      latitude: house.latitude,
+      longitude: house.longitude,
+      image: house.image as string,
+      url: house.url,
+      realEstateAgentID: estatesFind?.id as number,
+    };
+    houseArray.push(houseObject);
+  }
+
+  return houseArray;
+}
+
+export function createSalesArray(
+  houses: Array<THouseObject>
+): Array<SalesHouse> {
+  const salesArray: Array<SalesHouse> = [];
+  for (let index = 0; index < houses.length; index++) {
+    const house: THouseObject = houses[index];
+    if (house.forSale === true && house.askingPrice !== null) {
+      const salesObject: SalesHouse = {
+        houseId: house.uuid,
+        askingPrice: house.askingPrice as number,
+      };
+      salesArray.push(salesObject);
+    }
+  }
+  return salesArray;
+}
+
+export function createRentalArray(
+  houses: Array<THouseObject>
+): Array<RentalHouse> {
+  const rentalArray: Array<RentalHouse> = [];
+  for (let index = 0; index < houses.length; index++) {
+    const house: THouseObject = houses[index];
+    if (house.forSale === false) {
+      const rentalObject = {
+        houseId: house.uuid,
+        priceMonthly: house.rentalPrice,
+      };
+      rentalArray.push(rentalObject);
+    }
+  }
+  return rentalArray;
+}
+
 export function removeDuplicates(
   array: Array<TRealEstateAgent>
 ): Array<TRealEstateAgent> {
@@ -61,54 +132,17 @@ async function seedDB() {
     where: {},
   });
 
-  for (let index = 0; index < houses.length; index++) {
-    const house: THouseObject = houses[index];
+  const houseDataBase = await prisma.houseDetails.createMany({
+    data: createHouseArray(houses, getRealEstates),
+  });
 
-    const estatesFind = getRealEstates.find((realEstate) => {
-      if (realEstate.name === house.realEstate) {
-        return realEstate;
-      }
-    });
+  const salesDataBase = await prisma.salesHouse.createMany({
+    data: createSalesArray(houses),
+  });
 
-    // console.log(estatesFind?.id);
-
-    //realEstate = one-to-many relation to houseDetails
-
-    const houseDataBase = await prisma.houseDetails.create({
-      data: {
-        uuid: house.uuid,
-        address: house.address,
-        postcalCode: house.postalCode,
-        floorArea: house.floorArea,
-        roomCount: house.roomCount,
-        availabilityStatus: house.availabilityStatus,
-        latitude: house.latitude,
-        longitude: house.longitude,
-        image: house.image,
-        url: house.url,
-        realEstateAgentID: estatesFind?.id,
-      },
-    });
-
-    //salesDatabase = one-to-one relation to houseDetails
-    if (house.forSale === true && house.askingPrice !== null) {
-      const salesDataBase = await prisma.salesHouse.create({
-        data: {
-          houseId: house.uuid,
-          askingPrice: house.askingPrice,
-        },
-      });
-    }
-    //rentalDatabase = one-to-one relation to houseDetails
-    if (house.forSale === false) {
-      const rentalDataBase = await prisma.rentalHouse.create({
-        data: {
-          houseId: house.uuid,
-          priceMonthly: house.rentalPrice,
-        },
-      });
-    }
-  }
+  const rentalDataBase = await prisma.rentalHouse.createMany({
+    data: createRentalArray(houses),
+  });
 }
 
 seedDB()

@@ -19,3 +19,9 @@ export type TRealEstateAgent = {
   name: string;
   id?: number;
 };
+
+export type TCoordinates = {
+  address: string;
+  latitude: number;
+  longitude: number;
+};

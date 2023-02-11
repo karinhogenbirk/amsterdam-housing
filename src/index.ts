@@ -4,9 +4,9 @@ import axios from "axios";
 import fs, { truncate } from "fs";
 import dotenv from "dotenv";
 dotenv.config();
-console.log(process.env);
 import { v4 as uuidv4 } from "uuid";
 const APIKey: string = process.env.API_KEY;
+import { THouseObject } from "./entities";
 
 function clearHouseDetails() {
   truncate("houseDetails.json", (err) => {
@@ -256,24 +256,7 @@ export async function parseHousing(listedHouse: HTMLElement | null) {
   }
 }
 
-type THouseObject = {
-  uuid: string | null | undefined;
-  address: string | null | undefined;
-  postalCode: string | null | undefined;
-  rentalPrice: number | null;
-  askingPrice: number | null;
-  floorArea: number | null;
-  roomCount?: number | null;
-  availabilityStatus: string | null | undefined;
-  realEstate: string | null | undefined;
-  latitude: number | null;
-  longitude: number | null;
-  image: string | null | undefined;
-  url: string | null | undefined;
-  forSale: boolean | null;
-};
-
-const houseArray: Array<object> = [];
+const houseArray: Array<THouseObject> = [];
 
 async function getFundaPage(pageNumber: number) {
   const response = await axios.get(
@@ -293,7 +276,7 @@ async function getFundaPage(pageNumber: number) {
       }
 
       const houseObject = await parseHousing(listedHouse[index]);
-      console.log(houseObject);
+      // console.log(houseObject);
       if (houseObject !== undefined) {
         houseArray.push(houseObject);
       }
@@ -334,7 +317,7 @@ async function getPages(lastPageNumber: number) {
 
 getPageLimit();
 
-to test:
-getFundaPage(4);
-getCoordinates("Hellingbaan 326 1033 DB Amsterdam");
-clearHouseDetails();
+// to test:
+// getFundaPage(4);
+// getCoordinates("Hellingbaan 326 1033 DB Amsterdam");
+// clearHouseDetails();

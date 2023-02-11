@@ -8,28 +8,7 @@ import {
   SalesHouse,
 } from "@prisma/client";
 const prisma = new PrismaClient();
-
-type THouseObject = {
-  uuid: string;
-  address: string;
-  postalCode: string;
-  rentalPrice: number;
-  askingPrice: number | null;
-  floorArea?: number;
-  roomCount?: number;
-  availabilityStatus: string;
-  realEstate: string;
-  latitude: number;
-  longitude: number;
-  image?: string;
-  url: string;
-  forSale: boolean;
-};
-
-type TRealEstateAgent = {
-  name: string;
-  id?: number;
-};
+import { THouseObject, TRealEstateAgent } from "../../src/entities";
 
 export function createRealEstateArray(
   houses: Array<THouseObject>
@@ -38,7 +17,7 @@ export function createRealEstateArray(
   for (let index = 0; index < houses.length; index++) {
     const house: THouseObject = houses[index];
     const realEstateObject = { name: house.realEstate };
-    realEstateArray.push(realEstateObject);
+    realEstateArray.push(realEstateObject as TRealEstateAgent);
   }
 
   return removeDuplicates(realEstateArray);
@@ -58,16 +37,16 @@ export function createHouseArray(
       }
     });
     const houseObject: HouseDetails = {
-      uuid: house.uuid,
-      address: house.address,
-      postcalCode: house.postalCode,
+      uuid: house.uuid as string,
+      address: house.address as string,
+      postcalCode: house.postalCode as string,
       floorArea: house.floorArea as number | null,
       roomCount: house.roomCount as number | null,
-      availabilityStatus: house.availabilityStatus,
-      latitude: house.latitude,
-      longitude: house.longitude,
+      availabilityStatus: house.availabilityStatus as string,
+      latitude: house.latitude as number,
+      longitude: house.longitude as number,
       image: house.image as string,
-      url: house.url,
+      url: house.url as string,
       realEstateAgentID: estatesFind?.id as number,
     };
     houseArray.push(houseObject);
@@ -84,7 +63,7 @@ export function createSalesArray(
     const house: THouseObject = houses[index];
     if (house.forSale === true && house.askingPrice !== null) {
       const salesObject: SalesHouse = {
-        houseId: house.uuid,
+        houseId: house.uuid as string,
         askingPrice: house.askingPrice as number,
       };
       salesArray.push(salesObject);
@@ -104,7 +83,7 @@ export function createRentalArray(
         houseId: house.uuid,
         priceMonthly: house.rentalPrice,
       };
-      rentalArray.push(rentalObject);
+      rentalArray.push(rentalObject as RentalHouse);
     }
   }
   return rentalArray;

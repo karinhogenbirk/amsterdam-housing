@@ -4,7 +4,8 @@ run-name: ${{ github.actor }} is updating available housing
 on:
   schedule: 
   - cron: "0 4 * * *"
-
+env: 
+  API_KEY: ${{ secrets.API_KEY }}
 jobs:
   scheduled-job:
     runs-on: ubuntu-latest

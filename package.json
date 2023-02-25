@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "npx jest",
+    "test": "npx jest --detectOpenHandles",
     "test:watch": "npx jest --watch",
     "scrape": "node dist/src/index.js",
     "start": "node dist/src/app.js",

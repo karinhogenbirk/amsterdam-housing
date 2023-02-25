@@ -168,7 +168,12 @@ export async function parseHousing(listedHouse: HTMLElement | null) {
     const detailsQuery = takeDetails(listedHouse);
 
     const details: string | null | undefined = removeSpaces(detailsQuery);
+    console.log(details);
+    // const roomCountRegex = /d+(?=s*kamers)/;
+    //RegExp("d+(?=s*kamers)", "gi");
+
     if (typeof details === "string") {
+      // console.log(details.match(roomCountRegex));
       const detailsArray: Array<string> = details?.split(" ");
       //SCENARIOS:
       //zonder kamers:
@@ -308,6 +313,6 @@ async function getPages(lastPageNumber: number) {
 getPageLimit();
 
 // to test:
-// getFundaPage(4);
+// getFundaPage(45);
 // getCoordinates("Hellingbaan 326 1033 DB Amsterdam");
 // clearHouseDetails();

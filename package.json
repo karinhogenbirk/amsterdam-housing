@@ -6,7 +6,7 @@
   "scripts": {
     "test": "npx jest --detectOpenHandles",
     "test:watch": "npx jest --watch",
-    "scrape": "node dist/src/index.js",
+    "scrape": "node dist/src/scraper.js",
     "start": "node dist/src/app.js",
     "refresh-test-html": "npx ts-node src/testdata/gettestdata.ts",
     "seed:db": "node dist/prisma/seeders/seeder.js",

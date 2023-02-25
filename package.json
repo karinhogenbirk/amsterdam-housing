@@ -2,7 +2,7 @@
   "name": "amsterdamhousing",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
+  "main": "scraper.js",
   "scripts": {
     "test": "npx jest --detectOpenHandles",
     "test:watch": "npx jest --watch",

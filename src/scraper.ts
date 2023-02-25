@@ -1,4 +1,6 @@
+
 import { parseListings } from "./parser";
+
 import { htmlToJSDOM } from "./utils";
 import axios from "axios";
 import fs, { truncate } from "fs";
@@ -7,6 +9,7 @@ dotenv.config();
 import { v4 as uuidv4 } from "uuid";
 const APIKey: string = process.env.API_KEY;
 import { THouseObject, TCoordinates } from "./entities";
+
 
 function clearHouseDetails() {
   truncate("houseDetails.json", (err) => {
@@ -252,6 +255,7 @@ export async function parseHousing(listedHouse: HTMLElement | null) {
 }
 
 const houseArray: Array<THouseObject> = [];
+
 
 async function getFundaPage(pageNumber: number) {
   const response = await axios.get(

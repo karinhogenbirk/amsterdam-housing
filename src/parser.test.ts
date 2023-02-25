@@ -1,6 +1,8 @@
 import html from "./testdata/amsterdamRent";
 import { htmlToJSDOM } from "./utils";
 import { parseListings } from "./parser";
+
+
 import {
   parseHousing,
   removeSpaces,
@@ -9,6 +11,7 @@ import {
   takePostalCode,
   takeRealEstate,
 } from "./scraper";
+
 
 describe("Find house listings", () => {
   test("should find all ordered lists", () => {

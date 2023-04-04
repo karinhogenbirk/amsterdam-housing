@@ -10,7 +10,6 @@ import { v4 as uuidv4 } from "uuid";
 const APIKey: string = process.env.API_KEY;
 import { THouseObject, TCoordinates } from "./entities";
 
-
 function clearHouseDetails() {
   truncate("houseDetails.json", (err) => {
     if (err) throw err;
@@ -18,22 +17,21 @@ function clearHouseDetails() {
   });
 }
 
-async function getCoordinates(address: string | undefined | null) {
-  if (typeof address === "string") {
+async function getCoordinates(postalCode: string | undefined | null) {
+  if (typeof postalCode === "string") {
     const response = await axios.get(
-      `https://maps.googleapis.com/maps/api/geocode/json?address=${address}&key=${APIKey}`
+       `http://api.openweathermap.org/geo/1.0/zip?zip=${postalCode},NL&appid=${APIKey}`
     );
-    const data = response.data;
-    const geometry = data.results[0].geometry;
-    const coordinates = geometry.location;
     const coordinatesObject: TCoordinates = {
-      address: address,
-      latitude: coordinates.lat,
-      longitude: coordinates.lng,
+      address: postalCode,
+      latitude: response.data.lat,
+      longitude: response.data.lon,
     };
     return coordinatesObject;
   }
 }
+
+
 
 export function removeSpaces(query: string | undefined | null) {
   if (typeof query === "string") {
@@ -134,12 +132,11 @@ export async function parseHousing(listedHouse: HTMLElement | null) {
     const postalCodeQuery = takePostalCode(listedHouse);
     const postalCode = removeSpaces(postalCodeQuery);
     houseObject.postalCode = postalCode;
-    const fullAddress = address + " " + postalCode;
-    const coordinates = await getCoordinates(fullAddress);
+    const trimmedPostalCode = postalCode?.replace("Amsterdam", "");
+    const coordinates = await getCoordinates(trimmedPostalCode);
     coordinatesArray.push(coordinates as TCoordinates);
     houseObject.latitude = coordinates?.latitude as number;
     houseObject.longitude = coordinates?.longitude as number;
-    fs.writeFileSync("./coordinates.json", JSON.stringify(coordinatesArray));
 
     const priceQuery = listedHouse?.querySelectorAll(".search-result-price");
     if (priceQuery !== undefined) {
@@ -318,5 +315,5 @@ getPageLimit();
 
 // to test:
 // getFundaPage(45);
-// getCoordinates("Hellingbaan 326 1033 DB Amsterdam");
+// getCoordinates("1033 DB");
 // clearHouseDetails();
